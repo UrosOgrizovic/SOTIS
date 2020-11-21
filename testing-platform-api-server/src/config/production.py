@@ -26,4 +26,3 @@ MEDIA_URL = f'https://s3.amazonaws.com/{AWS_STORAGE_BUCKET_NAME}/'
 AWS_HEADERS = {
     'Cache-Control': 'max-age=86400, s-maxage=86400, must-revalidate',
 }
-

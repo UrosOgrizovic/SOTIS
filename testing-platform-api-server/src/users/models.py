@@ -14,19 +14,18 @@ from easy_thumbnails.signal_handlers import generate_aliases_global
 from src.common.helpers import build_absolute_uri
 
 
-@receiver(reset_password_token_created)
-def password_reset_token_created(sender, instance, reset_password_token, *args, **kwargs):
-    """
-    Handles password reset tokens
-    When a token is created, an e-mail needs to be sent to the user
-    """
-    reset_password_path = reverse('password_reset:reset-password-request')
-    context = {
-        'username': reset_password_token.user.username,
-        'email': reset_password_token.user.email,
-        'reset_password_url': build_absolute_uri(f'{reset_password_path}?token={reset_password_token.key}'),
-    }
-
+# @receiver(reset_password_token_created)
+# def password_reset_token_created(sender, instance, reset_password_token, *args, **kwargs):
+#     """
+#     Handles password reset tokens
+#     When a token is created, an e-mail needs to be sent to the user
+#     """
+#     reset_password_path = reverse('password_reset:reset-password-request')
+#     context = {
+#         'username': reset_password_token.user.username,
+#         'email': reset_password_token.user.email,
+#         'reset_password_url': build_absolute_uri(f'{reset_password_path}?token={reset_password_token.key}'),
+#     }
 
 
 class User(AbstractUser):
