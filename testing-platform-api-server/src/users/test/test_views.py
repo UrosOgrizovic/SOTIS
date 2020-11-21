@@ -16,7 +16,7 @@ class TestUserListTestCase(APITestCase):
     """
     def setUp(self):
         self.url = reverse('user-list')
-        self.user_data = {'username': 'test', 'password': 'test'}
+        self.user_data = {'username': 'test', 'password': 'test', 'group': 'Expert'}
 
     def test_post_request_with_no_data_fails(self):
         response = self.client.post(self.url, {})
