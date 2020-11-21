@@ -1,12 +1,15 @@
 name: Lint
 
-on: [push]
+on: [pull_request, push]
 
 jobs:
-  eslint:
-    runs-on: ubuntu-latest
+  lint:
     steps:
       - uses: actions/checkout@v1
-      - uses: stefanoeb/eslint-action@1.0.2
+      - uses: a-b-r-o-w-n/eslint-action@v2
         with:
-          files: testing-platform-client/src
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          files: "testing-platform-client/src/**/*"
+          extensions: ".js,.ts"
+          working-directory: "./testing-platform-client"
+          quiet: "false"

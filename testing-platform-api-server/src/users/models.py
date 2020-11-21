@@ -6,12 +6,12 @@ from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import post_save
 from rest_framework.authtoken.models import Token
 from easy_thumbnails.fields import ThumbnailerImageField
-from django.urls import reverse
-from django_rest_passwordreset.signals import reset_password_token_created
+# from django.urls import reverse
+# from django_rest_passwordreset.signals import reset_password_token_created
 from easy_thumbnails.signals import saved_file
 from easy_thumbnails.signal_handlers import generate_aliases_global
 
-from src.common.helpers import build_absolute_uri
+# from src.common.helpers import build_absolute_uri
 
 
 # @receiver(reset_password_token_created)
