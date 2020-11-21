@@ -11,6 +11,5 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: '13.x'
-      - run: cd testing-platform-client
-      - run: yarn
-      - run: yarn lint
+      - run: yarn --cwd ./testing-platform-client
+      - run: yarn --cwd ./testing-platform-client lint
