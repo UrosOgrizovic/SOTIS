@@ -3,10 +3,14 @@ name: Lint
 on: [push]
 
 jobs:
-  eslint:
+  lint:
     runs-on: ubuntu-latest
+    name: Run eslint
     steps:
       - uses: actions/checkout@v1
-      - uses: stefanoeb/eslint-action@1.0.2
+      - uses: actions/setup-node@v1
         with:
-          files: testing-platform-client/
+          node-version: '13.x'
+      - run: cd testing-platform-client
+      - run: yarn
+      - run: yarn lint
