@@ -3,6 +3,7 @@ import sentry_sdk
 import sys
 
 from sentry_sdk.integrations.django import DjangoIntegration
+from django.core.management.utils import get_random_secret_key
 from os.path import join
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -52,7 +53,7 @@ MIDDLEWARE = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', get_random_secret_key())
 ALLOWED_HOSTS = ["*"]
 ROOT_URLCONF = 'src.urls'
 WSGI_APPLICATION = 'src.wsgi.application'
