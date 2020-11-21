@@ -1,0 +1,3 @@
+USER_GROUP_EXPERT = 'Expert'
+USER_GROUP_TEACHER = 'Teacher'
+USER_GROUP_STUDENT = 'Student'
