@@ -32,9 +32,9 @@ jobs:
         run: |
           sudo apt-get purge python-pip
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r testing-platform-api-server/requirements.txt
       - name: Run Tests
-        run: python manage.py test
+        run: python testing-platform-api-server/manage.py test
         env:
           DB_NAME: db
           DB_USER: root
