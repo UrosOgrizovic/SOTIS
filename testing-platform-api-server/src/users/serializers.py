@@ -30,7 +30,6 @@ class CreateUserSerializer(serializers.ModelSerializer):
         # the password will be stored in plain text.
         user_group_name = validated_data.pop('group')
         user = User.objects.create_user(**validated_data)
-        print(user_group_name)
         user.groups.add(Group.objects.get(name=user_group_name))
 
         return user

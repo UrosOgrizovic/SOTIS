@@ -10,6 +10,8 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
 from src.users.urls import usersRouter
+from src.exams.urls import examsRouter, questionsRouter, choicesRouter
+from src.exams.models import Exam, Question, Choice
 
 schema_view = get_schema_view(
     openapi.Info(title="Pastebin API", default_version='v1'),
@@ -19,6 +21,14 @@ schema_view = get_schema_view(
 router = DefaultRouter()
 
 router.registry.extend(usersRouter.registry)
+router.registry.extend(examsRouter.registry)
+router.registry.extend(questionsRouter.registry)
+router.registry.extend(choicesRouter.registry)
+
+# add apps to admin panel
+admin.site.register(Exam)
+admin.site.register(Question)
+admin.site.register(Choice)
 
 urlpatterns = [
     # admin panel
@@ -43,4 +53,5 @@ urlpatterns = [
 
     # the 'api-root' from django rest-frameworks default router
     re_path(r'^$', RedirectView.as_view(url=reverse_lazy('api-root'), permanent=False)),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

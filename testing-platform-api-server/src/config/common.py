@@ -36,6 +36,7 @@ INSTALLED_APPS = (
     # Your apps
     'src.users',
     'src.common',
+    'src.exams',
 
     # Third party optional apps
     # app must be placed somewhere after all the apps that are going to be generating activities

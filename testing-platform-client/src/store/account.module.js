@@ -67,7 +67,8 @@ const mutations = {
     },
     registerFailure(state) {
         state.status = {};
-    }
+    },
+    
 };
 
 export const account = {
