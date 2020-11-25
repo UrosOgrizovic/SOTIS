@@ -1,42 +1,45 @@
 import { examService, choiceService, questionService } from '../services';
 
-const currentExams = {exams: null, questions: null, choices: null};
+const currentExams = {exams: [], questions: [], choices: {}};
 
 const actions = {
-    getAllExams({ commit }) {
+    fetchAllExams({ commit }) {
         examService.getAll().then(exams => {
-            commit('getAllExams', exams);
+            commit('setExams', exams);
         })
     },
-    getAllQuestions({ commit }) {
+    fetchAllQuestions({ commit }) {
         questionService.getAll().then(questions => {
-            commit('getAllQuestions', questions);
+            commit('setQuestions', questions);
         })
     },
-    getAllChoices({ commit }) {
+    fetchAllChoices({ commit }) {
         choiceService.getAll().then(choices => {
-            commit('getAllChoices', choices);
+            commit('setChoices', choices);
         })
-        
     }
 };
-
+// import Vue from 'vue'
 const mutations = {
-    getAllExams(allExams) {
+    setExams(currentExams, allExams) {
         currentExams.exams = allExams;
     },
-    getAllQuestions(allQuestions) {
+    setQuestions(currentExams, allQuestions) {
         currentExams.questions = allQuestions;
     },
-    getAllChoices(allChoices) {
-        currentExams.choices = allChoices;
+    setChoices(currentExams, allChoices) {
+        // Vue.set(currentExams, 'choices', allChoices);
+        currentExams.choices = allChoices[0];
     }
 };
 
 const getters = {
-    getAllExams: () => {return examService.getAll()},
-    getAllQuestions: () => {return questionService.getAll()},
-    getAllChoices: () => {return choiceService.getAll()}
+    getAllExams: currentExams => {return currentExams.exams},
+    getAllQuestions: currentExams => {return currentExams.questions},
+    // getAllChoices: currentExams => { console.log(JSON.parse(JSON.stringify(currentExams))); return currentExams.choices}
+    
+    getAllChoices: currentExams => { return currentExams.choices }
+    // getAllChoices: () => {return "AAA"}
 };
 
 export const exams = {

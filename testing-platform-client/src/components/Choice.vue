@@ -1,10 +1,10 @@
 <template>
-    <ul id="choices">
-        {{ "aaa" }}
-        {{ log(getAllChoices()) }}
-        <!-- {{ log("AAAAAA " + resolvePromise(choices)) }} -->
-        {{ log(choices)}}
-        <!-- {{ choices.then(chcs => {log(chcs)}) }} -->
+    <ul>
+        {{ "zzz" }}
+        <!-- {{ log(fetchAllChoices()) }} -->
+        <!-- {{ log(JSON.parse(JSON.stringify(allChoices))) }} -->
+        {{ log(choices) }}
+        <!-- {{ getChoices() }} -->
         <li v-for="choice in choices" :key="choice.id">
             aaaa {{choice.id}} | {{choice.choiceText}}
         </li>
@@ -12,20 +12,50 @@
 </template>
 
 <script>
-import { mapState, mapGetters, mapActions } from 'vuex'
+import { mapActions } from 'vuex'
+// import { mapGetters, mapActions } from 'vuex'
 export default {
+    // data () {
+    //     return {
+    //         // choices: {},
+    //     }
+    // },
     computed: {
-        ...mapState({
-            account: state => state.account,
-            exams: exams => exams.currentExams
-        }),
-        ...mapGetters({choices: 'exams/getAllChoices'}),
+        choices: {
+            cache: false,
+            get: function () {
+                return this.$store.state.exams.allChoices;
+            }
+        }
+        // ...mapState({
+            // account: state => state.account,
+            // choices: exams => exams.allChoices
+        // }),
+        // ...mapState('exams', ['allChoices']),
+        // ...mapGetters({choices: 'exams/getAllChoices'}),
+        // choices() {
+            // return this.$store.state.exams.choices
+        // }
+        // ...mapGetters({getAllChoices: 'exams/getAllChoices'}),
+        // getChoices() {
+        //     console.log(this.$store);
+        //     return this.$store.state.exams.allChoices;
+        // }
+
     },
     methods: {
-        ...mapActions('exams', ['getAllChoices']),   
+        ...mapActions('exams', ['fetchAllChoices']),   
         log(item) {
             console.log(item);
-        },
+        }
+    },
+    mounted() {
+        this.fetchAllChoices();
+        console.log("A");
+        // console.log(this.$store)
+        setTimeout(() => {console.log(this.$store.state.exams.choices)}, 1000)
+        // console.log(JSON.parse(JSON.stringify(this.choices)));
+        // console.log(this.getAllChoices);
     }
 }
 </script>
