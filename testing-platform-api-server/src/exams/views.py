@@ -10,7 +10,6 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from src.exams.models import Exam, Question, Choice
 from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer
 
-
 class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                   mixins.CreateModelMixin, mixins.ListModelMixin,
                   viewsets.GenericViewSet):
@@ -25,7 +24,7 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
     def get_serializer_class(self):
         return self.serializers.get(self.action, self.serializers['default'])
 
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
 class QuestionViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                   mixins.CreateModelMixin, mixins.ListModelMixin,
@@ -41,7 +40,7 @@ class QuestionViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
     def get_serializer_class(self):
         return self.serializers.get(self.action, self.serializers['default'])
 
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
 
 class ChoiceViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
@@ -58,4 +57,4 @@ class ChoiceViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
     def get_serializer_class(self):
         return self.serializers.get(self.action, self.serializers['default'])
 
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
