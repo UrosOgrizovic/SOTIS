@@ -1,6 +1,6 @@
 import { examService, choiceService, questionService } from '../services';
 
-const currentExams = {exams: [], questions: [], choices: {}};
+const state = {exams: [], questions: [], choices: []};
 
 const actions = {
     fetchAllExams({ commit }) {
@@ -21,25 +21,28 @@ const actions = {
 };
 // import Vue from 'vue'
 const mutations = {
-    setExams(currentExams, allExams) {
-        currentExams.exams = allExams;
+    setExams(state, allExams) {
+        state.exams = allExams;
     },
-    setQuestions(currentExams, allQuestions) {
-        currentExams.questions = allQuestions;
+    setQuestions(state, allQuestions) {
+        state.questions = allQuestions;
     },
-    setChoices(currentExams, allChoices) {
+    setChoices(state, allChoices) {
         // Vue.set(currentExams, 'choices', allChoices);
-        currentExams.choices = allChoices[0];
+        state.choices = [...allChoices];
     }
 };
 
 const getters = {
-    getAllExams: currentExams => {return currentExams.exams},
-    getAllQuestions: currentExams => {return currentExams.questions},
-    // getAllChoices: currentExams => { console.log(JSON.parse(JSON.stringify(currentExams))); return currentExams.choices}
-    
-    getAllChoices: currentExams => { return currentExams.choices }
-    // getAllChoices: () => {return "AAA"}
+    getAllExams(state) {
+        return state.exams
+    },
+    getAllQuestions(state) {
+        return state.questions
+    },
+    getAllChoices(state) {
+        return state.choices
+    }
 };
 
 export const exams = {
@@ -47,5 +50,5 @@ export const exams = {
     actions,
     mutations,
     getters,
-    currentExams
+    state
 };
