@@ -1,14 +1,9 @@
-from django.shortcuts import render
-
 from rest_framework import viewsets, mixins
-from rest_framework.permissions import AllowAny
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 
 from src.exams.models import Exam, Question, Choice
 from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer
+
 
 class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                   mixins.CreateModelMixin, mixins.ListModelMixin,
@@ -26,9 +21,10 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
     permission_classes = [IsAuthenticated]
 
+
 class QuestionViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
-                  mixins.CreateModelMixin, mixins.ListModelMixin,
-                    viewsets.GenericViewSet):
+                      mixins.CreateModelMixin, mixins.ListModelMixin,
+                      viewsets.GenericViewSet):
     """
         Creates, Updates and Retrieves - Questions
         """
@@ -44,7 +40,7 @@ class QuestionViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
 
 class ChoiceViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
-                  mixins.CreateModelMixin, mixins.ListModelMixin,
+                    mixins.CreateModelMixin, mixins.ListModelMixin,
                     viewsets.GenericViewSet):
     """
         Creates, Updates and Retrieves - Choices

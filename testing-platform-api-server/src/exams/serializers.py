@@ -9,6 +9,7 @@ class ChoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Choice
         fields = '__all__'
+        depth = 1
 
 
 class QuestionSerializer(serializers.ModelSerializer):
@@ -17,6 +18,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = '__all__'
+        depth = 1
 
 
 class ExamSerializer(serializers.ModelSerializer):

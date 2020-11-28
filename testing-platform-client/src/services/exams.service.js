@@ -15,7 +15,14 @@ function getAll() {
     };
 
     return fetch(`${config.apiUrl}/exams/`, requestOptions)
+        .then(handleResponse)
         .then(exams => {
-            return exams;
+            return exams.results;
         });
+}
+
+function handleResponse(response) {
+    return response.text().then(text => {
+        return JSON.parse(text);
+    });
 }
