@@ -11,6 +11,7 @@ class ChoiceSerializer(serializers.ModelSerializer):
         fields = '__all__'
         depth = 1
 
+
 class QuestionSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(format='hex')
 
@@ -18,6 +19,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         model = Question
         fields = '__all__'
         depth = 1
+
 
 class ExamSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(format='hex')
