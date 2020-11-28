@@ -22,13 +22,13 @@ const actions = {
 // import Vue from 'vue'
 const mutations = {
     setExams(state, allExams) {
-        state.exams = allExams;
+        state.exams = [...allExams];
     },
     setQuestions(state, allQuestions) {
         state.questions = allQuestions;
+        state.questions = [...allQuestions];
     },
     setChoices(state, allChoices) {
-        // Vue.set(currentExams, 'choices', allChoices);
         state.choices = [...allChoices];
     }
 };

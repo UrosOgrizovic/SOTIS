@@ -1,7 +1,7 @@
 <template>
     <ul>
         <li v-for="choice in choices" :key="choice.id">
-            {{choice.choice_text}}
+            {{choice}}
         </li>
     </ul>
 </template>

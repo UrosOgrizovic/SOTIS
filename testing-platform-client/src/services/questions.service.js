@@ -16,7 +16,16 @@ function getAll() {
     };
 
     return fetch(`${config.apiUrl}/questions/`, requestOptions)
+        .then(handleResponse)
         .then(questions => {
-            return questions;
+            console.log("OVDE");
+            console.log(questions.results);
+            return questions.results;
         });
+}
+
+function handleResponse(response) {
+    return response.text().then(text => {
+        return JSON.parse(text);
+    });
 }
