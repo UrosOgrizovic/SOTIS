@@ -1,7 +1,7 @@
 <template>
     <ul id="exams">
         <li v-for="exam in exams" :key="exam.id">
-            {{exam}} {{exam.questions[0]}}
+            {{exam.title}} {{exam.questions}}
         </li>
     </ul>
 </template>

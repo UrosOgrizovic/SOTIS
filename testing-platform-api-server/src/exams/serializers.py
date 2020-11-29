@@ -17,7 +17,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = '__all__'
+        fields = ['id', 'question_text', 'exam', 'choices']
         depth = 1
 
 
@@ -26,4 +26,5 @@ class ExamSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Exam
-        fields = '__all__'
+        fields = ['id', 'title', 'creator', 'questions']
+        depth = 1

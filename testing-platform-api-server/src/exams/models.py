@@ -10,18 +10,13 @@ CHOICE_MAX_LEN = 200
 class Exam(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     creator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    # questions = models.ManyToManyField(Question, related_name='exams')
+    title = models.CharField('ExamTitle', max_length=255, null=True)
 
 
 class Question(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     question_text = models.CharField('QuestionText', max_length=255, unique=True)
     exam = models.ForeignKey(Exam, on_delete=models.SET_NULL, related_name='questions', null=True)
-    # choices = models.ManyToManyField(Choice, related_name='questions')
-    # correct_answer = models.ForeignKey(Choice, on_delete=models.SET_NULL, related_name='CorrectAnswer', null=True,
-    #                                    choices=choices)
-    # correct_answers = models.ManyToManyField(Choice, related_name='CorrectAnswers', choices=choices)
-    # correct_answer = models.CharField('CorrectAnswer', max_length=CHOICE_MAX_LEN)
 
 
 class Choice(models.Model):
