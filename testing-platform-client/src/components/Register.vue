@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <!-- <div>
         <h2>Register</h2>
         <form @submit.prevent="handleSubmit">
             <div class="form-group">
@@ -41,7 +41,58 @@
                 <router-link to="/login" class="btn btn-link">Cancel</router-link>
             </div>
         </form>
-    </div>
+    </div> -->
+    <div class="register">
+        <el-card>
+            <h2>Register</h2>
+            <el-form
+                class="register-form"
+                @submit.native.prevent="handleSubmit"
+            >
+                <el-form-item prop="first_name">
+                    <el-input v-model="user.first_name" placeholder="First Name" prefix-icon="fas fa-user"></el-input>
+                </el-form-item>
+                <el-form-item prop="last_name">
+                    <el-input v-model="user.last_name" placeholder="Last Name" prefix-icon="fas fa-user"></el-input>
+                </el-form-item>
+                <el-form-item prop="email">
+                    <el-input v-model="user.email" placeholder="Email" prefix-icon="fas fa-user"></el-input>
+                </el-form-item>
+                <el-form-item prop="username">
+                    <el-input v-model="user.username" placeholder="Username" prefix-icon="fas fa-user"></el-input>
+                </el-form-item>
+                <el-form-item prop="password">
+                    <el-input
+                        v-model="user.password"
+                        placeholder="Password"
+                        type="password"
+                        prefix-icon="fas fa-lock"
+                    ></el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-select v-model="user.group" placeholder="Group">
+                        <el-option v-for="item in options"
+                                   :key="item.value"
+                                   :label="item.label"
+                                   :value="item.value">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item>
+                    <el-button
+                        :loading="submitted"
+                        class="register-button"
+                        type="primary"
+                        native-type="submit"
+                        block
+                    >
+                        Register
+                    </el-button>
+                </el-form-item>
+                <router-link to="/login" class="btn btn-link login">Cancel</router-link>
+            </el-form>
+        </el-card>
+  </div>
 </template>
 
 <script>
@@ -57,6 +108,20 @@ export default {
                 password: '',
                 group: ''
             },
+            options: [
+                {
+                    label: 'Student',
+                    value: 'Student'
+                },
+                {
+                    label: 'Expert',
+                    value: 'Expert'
+                },
+                {
+                    label: 'Teacher',
+                    value: 'Teacer'
+                }
+            ],
             submitted: false
         }
     },
@@ -67,12 +132,31 @@ export default {
         ...mapActions('account', ['register']),
         handleSubmit() {
             this.submitted = true;
-            this.$validator.validate().then(valid => {
-                if (valid) {
-                    this.register(this.user);
-                }
-            });
+            this.register(this.user);
+
         }
     }
 };
 </script>
+
+
+<style scoped>
+.register {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.register-button {
+  width: 100%;
+  margin-top: 40px;
+}
+.register-form {
+  width: 290px;
+}
+.login {
+  margin-top: 10px;
+}
+</style>
+
