@@ -3,6 +3,9 @@ from django.db import models
 import uuid
 
 from src.users.models import User
+from jsonfield import JSONField
+
+from collections import OrderedDict
 
 CHOICE_MAX_LEN = 200
 
@@ -21,6 +24,12 @@ class Question(models.Model):
 
 class Choice(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    choice_text = models.CharField('ChoiceText', max_length=CHOICE_MAX_LEN, unique=True)
+    choice_text = models.CharField('ChoiceText', max_length=CHOICE_MAX_LEN, unique=False)
     question = models.ForeignKey(Question, on_delete=models.SET_NULL, related_name='choices', null=True)
     correct_answer = models.BooleanField(name='correct_answer', default=False)
+
+
+class ExamChoice(models.Model):
+    exam_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    choices = JSONField(load_kwargs={'object_pairs_hook': OrderedDict})     # keep order when loading
+    score = models.IntegerField(default=0)

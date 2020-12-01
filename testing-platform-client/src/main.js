@@ -4,6 +4,7 @@ import VeeValidate from 'vee-validate';
 import { store } from './store';
 import { router } from './helpers';
 import App from './App';
+import './plugins/element.js'
 
 Vue.use(VeeValidate);
 Vue.config.productionTip = false

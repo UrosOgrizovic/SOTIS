@@ -1,6 +1,6 @@
 import { examService, choiceService, questionService } from '../services';
 
-const state = {exams: [], questions: [], choices: []};
+const state = {exams: [], questions: [], choices: [], examResult: {id: 0, choices: [], score: 0}};
 
 const actions = {
     fetchAllExams({ commit }) {
@@ -17,19 +17,26 @@ const actions = {
         choiceService.getAll().then(choices => {
             commit('setChoices', choices);
         })
+    },
+    submitExam({ commit }, examChoices) {
+        examService.submitExam(examChoices).then(result => {
+            commit('setExamResult', result);
+        })
     }
 };
-// import Vue from 'vue'
+
 const mutations = {
     setExams(state, allExams) {
         state.exams = [...allExams];
     },
     setQuestions(state, allQuestions) {
-        state.questions = allQuestions;
         state.questions = [...allQuestions];
     },
     setChoices(state, allChoices) {
         state.choices = [...allChoices];
+    },
+    setExamResult(state, examResult) {
+        state.examResult = [...[examResult]];
     }
 };
 
@@ -42,6 +49,12 @@ const getters = {
     },
     getAllChoices(state) {
         return state.choices
+    },
+    getExamResult(state) {
+        return state.examResult
+    },
+    getExamScore(state) {
+        return state.examResult.score
     }
 };
 
