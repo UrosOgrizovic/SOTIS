@@ -17,6 +17,7 @@ django-summernote==0.8.11.6
 django-celery-beat==2.0.0
 django-activity-stream==0.9.0
 django-money==1.1
+jsonfield==3.1.0
 
 # Rest apis
 djangorestframework==3.11.0

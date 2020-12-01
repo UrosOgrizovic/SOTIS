@@ -1,22 +1,22 @@
 <template>
     <ul id="questions">
         <li v-for="question in questions" :key="question.id">
-            {{question.id}}
+            {{question}}
         </li>
     </ul>
 </template>
 
 <script>
-import { mapState, mapGetters, mapActions } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 export default {
     computed: {
-        ...mapState({
-            account: state => state.account
-        }),
         ...mapGetters({questions: 'exams/getAllQuestions'}),
     },
     methods: {
-        ...mapActions('exams', ['getAllQuestions'])
+        ...mapActions('exams', ['fetchAllQuestions'])
+    },
+    mounted() {
+        this.fetchAllQuestions();
     }
 }
 </script>
