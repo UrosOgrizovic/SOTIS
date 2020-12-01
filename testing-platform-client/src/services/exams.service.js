@@ -3,7 +3,8 @@ import { authHeader } from '../helpers';
 
 
 export const examService = {
-    getAll
+    getAll,
+    submitExam
 };
 
 function getAll() {
@@ -20,6 +21,27 @@ function getAll() {
             return exams.results;
         });
 }
+
+function submitExam(examChoices) {
+    const token = JSON.parse(localStorage.getItem('user')).token;
+    
+    const headers = authHeader();
+    headers['Content-Type'] = 'application/json';
+    headers['X-CSRFToken'] = token;
+
+    const requestOptions = {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(examChoices)
+    };
+
+    return fetch(`${config.apiUrl}/exams/submitExam/`, requestOptions)
+        .then(handleResponse)
+        .then(result => {
+            return result;
+        });
+}
+
 
 function handleResponse(response) {
     return response.text().then(text => {
