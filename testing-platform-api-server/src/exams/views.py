@@ -32,7 +32,7 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         try:
             json_exam_choice = json.loads(self.request.body)
             exam_choice = {'id': uuid.UUID(json_exam_choice['id']),
-                             'choices': [uuid.UUID(choice) for choice in json_exam_choice['choices']],
+                           'choices': [uuid.UUID(choice) for choice in json_exam_choice['choices']],
                            'score': 0}
 
             exam = Exam.objects.filter(id=exam_choice['id'])[0]
@@ -41,11 +41,10 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
             # choices = [choice for choice in choices if choice in exam_choice['choices']]
             for i in range(len(choices_by_question)):
                 for j in range(len(choices_by_question[i])):
-                    if choices_by_question[i][j].id in exam_choice['choices'] and choices_by_question[i][j].correct_answer:
+                    if choices_by_question[i][j].id in exam_choice['choices'] and \
+                            choices_by_question[i][j].correct_answer:
                         exam_choice['score'] += 1
 
-            # return Response(ExamChoiceSerializer(self.request.examChoices, context={'request': self.request}).data,
-            #                 status=status.HTTP_200_OK)
             return Response(ExamChoiceSerializer(exam_choice).data,
                             status=status.HTTP_200_OK)
 
