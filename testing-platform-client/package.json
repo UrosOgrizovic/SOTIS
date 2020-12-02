@@ -10,7 +10,8 @@
   "dependencies": {
     "core-js": "^3.6.5",
     "element-ui": "^2.14.1",
-    "element-ui-2.4.6": "^2.4.6",
+    "node-sass": "^5.0.0",
+    "sass-loader": "^10.1.0",
     "vee-validate": "^2.2.8",
     "vue": "^2.6.11",
     "vue-router": "^3.4.9",

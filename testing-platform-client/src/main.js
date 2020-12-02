@@ -1,12 +1,16 @@
 import Vue from 'vue';
-import VeeValidate from 'vee-validate';
+
+import ElementUI from 'element-ui';
 
 import { store } from './store';
 import { router } from './helpers';
 import App from './App';
 import './plugins/element.js'
 
-Vue.use(VeeValidate);
+import '../styles/login-register.scss';
+
+// Vue.use(VeeValidate);
+Vue.use(ElementUI)
 Vue.config.productionTip = false
 
 

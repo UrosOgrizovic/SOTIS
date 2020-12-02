@@ -11,7 +11,6 @@ from drf_yasg import openapi
 
 from src.users.urls import usersRouter
 from src.exams.urls import examsRouter, questionsRouter, choicesRouter
-from src.exams.models import Exam, Question, Choice
 
 schema_view = get_schema_view(
     openapi.Info(title="Pastebin API", default_version='v1'),
@@ -25,10 +24,6 @@ router.registry.extend(examsRouter.registry)
 router.registry.extend(questionsRouter.registry)
 router.registry.extend(choicesRouter.registry)
 
-# add apps to admin panel
-admin.site.register(Exam)
-admin.site.register(Question)
-admin.site.register(Choice)
 
 urlpatterns = [
     # admin panel

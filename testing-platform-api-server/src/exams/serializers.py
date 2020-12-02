@@ -13,7 +13,6 @@ class ChoiceSerializer(serializers.ModelSerializer):
 
 
 class QuestionSerializer(serializers.ModelSerializer):
-    id = serializers.UUIDField(format='hex')
 
     class Meta:
         model = Question
@@ -22,7 +21,6 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 
 class ExamSerializer(serializers.ModelSerializer):
-    id = serializers.UUIDField(format='hex')
     questions = QuestionSerializer(many=True)
 
     class Meta:
@@ -32,8 +30,7 @@ class ExamSerializer(serializers.ModelSerializer):
 
 
 class ExamChoiceSerializer(serializers.ModelSerializer):
-    id = serializers.UUIDField(format='hex')
 
     class Meta:
         model = ExamChoice
-        fields = ['id', 'choices', 'score']
+        fields = ['id', 'score']

@@ -51,7 +51,6 @@ MIDDLEWARE = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', get_random_secret_key())
@@ -288,7 +287,7 @@ SUMMERNOTE_CONFIG = {
             ['color', ['color']],
             ['para', ['ul', 'ol', 'paragraph', 'smallTagButton']],
             ['table', ['table']],
-            ['insert', ['link', 'video']],
+            ['insert', ['link', 'video', 'picture']],
             ['view', ['fullscreen', 'codeview', 'help']],
         ]
     }

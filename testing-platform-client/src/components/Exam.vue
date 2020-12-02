@@ -5,7 +5,7 @@
                 <h3 style="float: left;">Test title: {{exam.title}}</h3><br><br>
                 <ol style="margin-left: 0; margin-right: 0;">
                     <div v-for="question in exam.questions" :key="question.id">
-                        <li>{{question.question_text}}</li>
+                        <li v-html="question.question_text"></li>
                         <el-form-item>
                             <el-checkbox v-for="choice in question.choices" :key="choice.id" :label="choice.choice_text" id="choice.id" @change="handleChange(choice.id)"></el-checkbox>
                         </el-form-item>
@@ -17,7 +17,7 @@
                 </el-form-item>
             </el-form>
             <div style="display: flex;" v-if="show && examResult.length > 0" id="score">
-                Score: <p>{{examResult[0].score}}</p>
+                <p>Score: {{examResult[0].score}}</p>
             </div>
         </div>
         
@@ -47,10 +47,9 @@ export default {
         onSubmit(examId) {
             this.$refs['form'][0].validate((valid) => {
             if (valid) {
-                this.submitExam({"id": examId, "choices": this.form.choices, 'score': 0});
+                this.submitExam({"id": examId, "choices": this.form.choices});
                 this.show = true;
             } else {
-                console.log('error submit!!');
                 return false;
             }
         });
