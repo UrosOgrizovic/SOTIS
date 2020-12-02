@@ -22,7 +22,7 @@ function getAll() {
         });
 }
 
-function submitExam(examChoices) {
+function submitExam(examData) {
     const token = JSON.parse(localStorage.getItem('user')).token;
     
     const headers = authHeader();
@@ -32,10 +32,10 @@ function submitExam(examChoices) {
     const requestOptions = {
         method: 'POST',
         headers: headers,
-        body: JSON.stringify(examChoices)
+        body: JSON.stringify(examData)
     };
 
-    return fetch(`${config.apiUrl}/exams/submitExam/`, requestOptions)
+    return fetch(`${config.apiUrl}/exams/${examData['id']}/submitExam/`, requestOptions)
         .then(handleResponse)
         .then(result => {
             return result;

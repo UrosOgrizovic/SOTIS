@@ -1,35 +1,36 @@
 from django.db import models
-
-import uuid
-
-from src.users.models import User
-from jsonfield import JSONField
+from django.conf import settings
 
 from collections import OrderedDict
 
-CHOICE_MAX_LEN = 200
-
-
 class Exam(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    creator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    title = models.CharField('ExamTitle', max_length=255, null=True)
+    creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    title = models.CharField(max_length=255, null=True)
+
+    def __str__(self):
+        return f'{self.title}'
 
 
 class Question(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    question_text = models.CharField('QuestionText', max_length=255, unique=True)
-    exam = models.ForeignKey(Exam, on_delete=models.SET_NULL, related_name='questions', null=True)
+    question_text = models.TextField(blank=True, null=True)
+    exam = models.ForeignKey(Exam, on_delete=models.CASCADE, related_name='questions', null=True)
+
+    def __str__(self):
+        return f'{self.question_text}'
+
 
 
 class Choice(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    choice_text = models.CharField('ChoiceText', max_length=CHOICE_MAX_LEN, unique=False)
+    choice_text = models.CharField(max_length=255)
     question = models.ForeignKey(Question, on_delete=models.SET_NULL, related_name='choices', null=True)
-    correct_answer = models.BooleanField(name='correct_answer', default=False)
+    correct_answer = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f'{self.choice_text}'
+
 
 
 class ExamChoice(models.Model):
-    exam_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    choices = JSONField(load_kwargs={'object_pairs_hook': OrderedDict})     # keep order when loading
     score = models.IntegerField(default=0)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    exam = models.ForeignKey(Exam, on_delete=models.CASCADE, related_name='results', null=True)
