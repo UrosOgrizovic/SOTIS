@@ -7,8 +7,6 @@ from rest_framework import status
 from src.exams.models import Exam, Question, Choice
 from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer, ExamChoiceSerializer
 
-import json
-import uuid
 
 class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                   mixins.CreateModelMixin, mixins.ListModelMixin,

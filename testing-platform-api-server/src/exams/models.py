@@ -1,8 +1,6 @@
 from django.db import models
 from django.conf import settings
 
-from collections import OrderedDict
-
 class Exam(models.Model):
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     title = models.CharField(max_length=255, null=True)
@@ -19,7 +17,6 @@ class Question(models.Model):
         return f'{self.question_text}'
 
 
-
 class Choice(models.Model):
     choice_text = models.CharField(max_length=255)
     question = models.ForeignKey(Question, on_delete=models.SET_NULL, related_name='choices', null=True)
@@ -27,7 +24,6 @@ class Choice(models.Model):
 
     def __str__(self):
         return f'{self.choice_text}'
-
 
 
 class ExamChoice(models.Model):
