@@ -4,9 +4,10 @@ import Router from 'vue-router';
 import Home from '../components/Home'
 import Login from '../components/Login'
 import Register from '../components/Register'
+import Domains from '../components/Domains'
+import Exams from '../components/Exams'
 import Exam from '../components/Exam'
-import Question from '../components/Question'
-import Choice from '../components/Choice'
+
 
 Vue.use(Router);
 
@@ -16,9 +17,9 @@ export const router = new Router({
     { path: '/', component: Home },
     { path: '/login', component: Login },
     { path: '/register', component: Register },
-    { path: '/exam', component: Exam },
-    { path: '/question', component: Question },
-    { path: '/choice', component: Choice },
+    { path: '/exams/:exam_id', name: 'single_exam', component: Exam},
+    { path: '/exams', component: Exams},
+    { path: '/domains', component: Domains},
 
     // otherwise redirect to home
     { path: '*', redirect: '/' }

@@ -11,6 +11,9 @@ from easy_thumbnails.fields import ThumbnailerImageField
 from easy_thumbnails.signals import saved_file
 from easy_thumbnails.signal_handlers import generate_aliases_global
 
+from src.common.constants import USER_GROUP_TEACHER, USER_GROUP_STUDENT, USER_GROUP_EXPERT
+
+
 # from src.common.helpers import build_absolute_uri
 
 
@@ -31,6 +34,18 @@ from easy_thumbnails.signal_handlers import generate_aliases_global
 class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     profile_picture = ThumbnailerImageField('ProfilePicture', upload_to='profile_pictures/', blank=True, null=True)
+
+    @property
+    def is_teacher(self):
+        return self.groups.filter(name=USER_GROUP_TEACHER).count() > 0
+
+    @property
+    def is_student(self):
+        return self.groups.filter(name=USER_GROUP_STUDENT).count() > 0
+
+    @property
+    def is_expert(self):
+        return self.groups.filter(name=USER_GROUP_EXPERT).count() > 0
 
     def __str__(self):
         return self.username
