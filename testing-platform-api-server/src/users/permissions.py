@@ -1,5 +1,4 @@
 from rest_framework import permissions
-from src.common.constants import USER_GROUP_TEACHER, USER_GROUP_STUDENT, USER_GROUP_EXPERT
 
 
 class IsTeacherUser(permissions.BasePermission):
@@ -7,7 +6,7 @@ class IsTeacherUser(permissions.BasePermission):
     Permission to only allow teachers to execute an action.
     """
     def has_permission(self, request, view):
-        return request.user.groups.filter(name=USER_GROUP_TEACHER).count() > 0
+        return request.user.is_teacher
 
 
 class IsStudentUser(permissions.BasePermission):
@@ -15,7 +14,7 @@ class IsStudentUser(permissions.BasePermission):
     Permission to only allow students to execute an action.
     """
     def has_permission(self, request, view):
-        return request.user.groups.filter(name=USER_GROUP_STUDENT).count() > 0
+        return request.user.is_student
 
 
 class IsExpertUser(permissions.BasePermission):
@@ -23,7 +22,7 @@ class IsExpertUser(permissions.BasePermission):
     Permission to only allow experts to execute an action.
     """
     def has_permission(self, request, view):
-        return request.user.groups.filter(name=USER_GROUP_EXPERT).count() > 0
+        return request.user.is_expert
 
 
 class IsUserOrReadOnly(permissions.BasePermission):

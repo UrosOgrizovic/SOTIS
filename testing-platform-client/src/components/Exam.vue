@@ -1,24 +1,22 @@
 <template>
     <div>
-        <div v-for="exam in exams" :key="exam.id" style="border-style: solid; margin: 10px 20px 10px 20px;">
-            <el-form :model="form" label-width="120px" :rules="rules" ref="form">
-                <h3 style="float: left;">Test title: {{exam.title}}</h3><br><br>
-                <ol style="margin-left: 0; margin-right: 0;">
-                    <div v-for="question in exam.questions" :key="question.id">
-                        <li v-html="question.question_text"></li>
-                        <el-form-item>
-                            <el-checkbox v-for="choice in question.choices" :key="choice.id" :label="choice.choice_text" id="choice.id" @change="handleChange(choice.id)"></el-checkbox>
-                        </el-form-item>
-                    </div>
-                </ol>
-                
-                <el-form-item prop="choices">
-                    <el-button style="float: right; margin-right: 10px;" type="primary" @click="onSubmit(exam.id)">Submit</el-button>
-                </el-form-item>
-            </el-form>
-            <div style="display: flex;" v-if="show && examResult.length > 0" id="score">
-                <p>Score: {{examResult[0].score}}</p>
-            </div>
+        <el-form :model="form" label-width="120px" :rules="rules" ref="form">
+            <h3 style="float: left;">Test title: {{exam.title}}</h3><br><br>
+            <ol style="margin-left: 0; margin-right: 0;">
+                <div v-for="question in exam.questions" :key="question.id">
+                    <li v-html="question.question_text"></li>
+                    <el-form-item>
+                        <el-checkbox v-for="choice in question.choices" :key="choice.id" :label="choice.choice_text" id="choice.id" @change="handleChange(choice.id)"></el-checkbox>
+                    </el-form-item>
+                </div>
+            </ol>
+            
+            <el-form-item prop="choices">
+                <el-button style="float: right; margin-right: 10px;" type="primary" @click="onSubmit(exam.id)">Submit</el-button>
+            </el-form-item>
+        </el-form>
+        <div style="display: flex;" v-if="show && examResult.length > 0" id="score">
+            <p>Score: {{examResult[0].score}}</p>
         </div>
         
     </div>
@@ -39,21 +37,18 @@ export default {
         }
     },
     computed: {
-        ...mapGetters({exams: 'exams/getAllExams',
-                        examResult: 'exams/getExamResult'})
+        ...mapGetters({
+            examResult: 'exams/getExamResult'
+        }),
+        exam() {
+            return this.$store.getters['exams/getExam'](this.exam_id)
+        }
     },
     methods: {
-        ...mapActions('exams', ['fetchAllExams', 'submitExam']),
+        ...mapActions('exams', ['submitExam']),
         onSubmit(examId) {
-            this.$refs['form'][0].validate((valid) => {
-            if (valid) {
-                this.submitExam({"id": examId, "choices": this.form.choices});
-                this.show = true;
-            } else {
-                return false;
-            }
-        });
-          
+            this.submitExam({"id": examId, "choices": this.form.choices});
+            this.show = true;          
         },
         handleChange(choiceId) {
             var idx = this.form.choices.indexOf(choiceId);
@@ -64,8 +59,8 @@ export default {
             }
         }
     },
-    mounted() {
-        this.fetchAllExams();
+    created() {
+        this.exam_id = this.$route.params.exam_id
     }
 }
 </script>

@@ -22,6 +22,12 @@ const actions = {
         examService.submitExam(examChoices).then(result => {
             commit('setExamResult', result);
         })
+    },
+    fetchPersonalizedExams({ commit }, data) {
+        examService.getPersonalizedExams(data).then(exams => {
+            console.log(exams)
+            commit('setExams', exams)
+        })
     }
 };
 
@@ -43,6 +49,11 @@ const mutations = {
 const getters = {
     getAllExams(state) {
         return state.exams
+    },
+    getExam(state) {
+        return (id) => {
+            return state.exams.find(exam => exam.id == id)
+        }
     },
     getAllQuestions(state) {
         return state.questions

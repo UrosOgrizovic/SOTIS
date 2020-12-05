@@ -4,7 +4,8 @@ import { authHeader } from '../helpers';
 
 export const examService = {
     getAll,
-    submitExam
+    submitExam,
+    getPersonalizedExams
 };
 
 function getAll() {
@@ -39,6 +40,21 @@ function submitExam(examData) {
         .then(handleResponse)
         .then(result => {
             return result;
+        });
+}
+
+function getPersonalizedExams(data) {
+    const headers = authHeader();
+    headers['Content-Type'] = 'application/json';
+    const requestOptions = {
+        method: 'GET',
+        headers: headers
+    };
+
+    return fetch(`${config.apiUrl}/domains/${data.id}/personalized_exams`, requestOptions)
+        .then(handleResponse)
+        .then(exams => {
+            return exams;
         });
 }
 

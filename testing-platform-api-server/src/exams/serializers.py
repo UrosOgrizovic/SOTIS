@@ -1,10 +1,16 @@
 from rest_framework import serializers
 
-from src.exams.models import Choice, Question, Exam, ExamChoice
+from src.exams.models import Choice, Question, Exam, ExamResult, Domain, Subject
+from src.users.serializers import UserSerializer
+
+
+class SubjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subject
+        exclude = ()
 
 
 class ChoiceSerializer(serializers.ModelSerializer):
-    id = serializers.UUIDField(format='hex')
 
     class Meta:
         model = Choice
@@ -22,15 +28,23 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 class ExamSerializer(serializers.ModelSerializer):
     questions = QuestionSerializer(many=True)
+    subject = SubjectSerializer(many=False)
+    creator = UserSerializer(many=False)
 
     class Meta:
         model = Exam
-        fields = ['id', 'title', 'creator', 'questions']
+        exclude = ('completed_by',)
         depth = 2
 
 
-class ExamChoiceSerializer(serializers.ModelSerializer):
+class ExamResultSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExamResult
+        fields = ['id', 'score']
+
+class DomainSerializer(serializers.ModelSerializer):
+    subject = SubjectSerializer(many=False)
 
     class Meta:
-        model = ExamChoice
-        fields = ['id', 'score']
+        model = Domain
+        exclude = ()
