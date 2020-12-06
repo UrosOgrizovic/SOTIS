@@ -1,6 +1,6 @@
   
 <template>
-    <div>
+    <div class="wrapper">
         <img width="200px" src="../assets/logo.png">
         <h1>Hi {{account.user.firstName}}!</h1>
         <div class="container">
@@ -13,17 +13,26 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapState, mapActions } from 'vuex'
 export default {
     computed: {
         ...mapState({
             account: state => state.account
         })
+    },
+    methods: {
+        ...mapActions('account', ['fetchUserObject']),
+    },
+    mounted() {
+        this.fetchUserObject();
     }
 };
 </script>
 
 <style scoped>
+.wrapper {
+    text-align: center;
+}
 .container {
     margin-left: 25%;
     margin-right: 25%;

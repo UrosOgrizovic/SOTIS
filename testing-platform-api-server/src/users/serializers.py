@@ -9,6 +9,8 @@ class UserSerializer(serializers.ModelSerializer):
                                                 allow_null=True,
                                                 alias_target='src.users')
 
+    groups = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')
+
     class Meta:
         model = User
         fields = (
@@ -17,6 +19,7 @@ class UserSerializer(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'profile_picture',
+            'groups'
         )
         read_only_fields = ('username', )
 

@@ -4,8 +4,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 
-from src.exams.models import Exam, Question, Choice, Domain, Problem
-from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer, ExamResultSerializer, DomainSerializer
+from src.exams.models import Exam, Question, Choice, Domain, Problem, Subject
+from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer, ExamResultSerializer, DomainSerializer, \
+    SubjectSerializer, CreateExamSerializer
 
 class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                   mixins.CreateModelMixin, mixins.ListModelMixin,
@@ -16,12 +17,21 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
     queryset = Exam.objects.all()
     serializers = {
         'default': ExamSerializer,
+        'create': CreateExamSerializer
     }
 
     def get_serializer_class(self):
         if self.action in ['submit_exam']:
             return ExamResultSerializer
         return self.serializers.get(self.action, self.serializers['default'])
+
+    def get_queryset(self):
+        if self.request.user.is_teacher:
+            return self.queryset.filter(subject__teacher=self.request.user)
+        elif self.request.user.is_student:
+            return self.queryset.filter(subject__students=self.request.user)
+        else:
+            return self.queryset.none()
 
     permission_classes = [IsAuthenticated]
 
@@ -45,6 +55,22 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
             self.request.user.passed_exams.add(self.get_object())
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class SubjectViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin):
+    """
+        Lists, Retrieves - Subjects
+    """
+
+    queryset = Subject.objects.all()
+    serializers = {
+        'default': SubjectSerializer
+    }
+
+    def get_serializer_class(self):
+        return self.serializers.get(self.action, self.serializers['default'])
+
+    permission_classes = [IsAuthenticated]
 
 
 class QuestionViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,

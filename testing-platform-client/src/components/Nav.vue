@@ -6,13 +6,30 @@
             <ul class="el-menu el-menu--horizontal navbar__menu">
                 <li class="el-menu-item"><router-link to="/">Home</router-link></li>
                 <li class="el-menu-item"><router-link to="/domains">View Domains</router-link></li>
+                <li class="el-menu-item"><router-link v-if="belongsToGroup('Teacher')" to="/exams">My Exams</router-link></li>
                 <li class="el-menu-item"><router-link to="/login">Logout</router-link></li>
             </ul>
         </el-col>
     </el-row>
 </template>
 <script>
-    export default {};
+import { mapState } from 'vuex'
+
+export default {
+    computed: {
+        ...mapState({
+            user: state => state.account.userObject
+        }),
+    },
+    methods: {
+        belongsToGroup(group) {
+            if(this.user && this.user.groups) {
+                return this.user.groups.includes(group);
+            } 
+            return false
+        }
+    }
+};
 </script>
 <style>
     .navbar__logo {

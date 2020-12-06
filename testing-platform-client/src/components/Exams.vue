@@ -1,5 +1,6 @@
 <template>
     <div>
+        <router-link to="new-exam">New Exam</router-link>
         <el-table
             :data="exams"
             style="width: 100%">
@@ -42,7 +43,7 @@ export default {
         ...mapGetters({exams: 'exams/getAllExams'})
     },
     methods: {
-        ...mapActions('exams', ['fetchPersonalizedExams']),
+        ...mapActions('exams', ['fetchPersonalizedExams', 'fetchAllExams']),
         chooseExam(index) {
             if (!this.exams.length) {
                 console.log("Exams list is empty!")
@@ -55,6 +56,8 @@ export default {
     mounted() {
         if (this.$route.query.domain_id) {
             this.fetchPersonalizedExams({id: this.$route.query.domain_id});
+        } else {
+            this.fetchAllExams()
         }
     }
 }

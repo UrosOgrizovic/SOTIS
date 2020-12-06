@@ -2,9 +2,11 @@ import { userService } from '../services';
 import { router } from '../helpers';
 
 const user = JSON.parse(localStorage.getItem('user'));
-const state = user
-    ? { status: { loggedIn: true }, user }
-    : { status: {}, user: null };
+const state = {
+    status: { loggedIn: !!user },
+    user: user,
+    userObject: {}
+}
 
 const actions = {
     login({ dispatch, commit }, { username, password }) {
@@ -39,6 +41,14 @@ const actions = {
                     commit('registerFailure', error);
                 }
             );
+    },
+    fetchUserObject({commit}) {
+        userService.fetchUserObject()
+            .then(
+                user => {
+                    commit('setUserObject', user)
+                }
+            )
     }
 };
 
@@ -68,7 +78,9 @@ const mutations = {
     registerFailure(state) {
         state.status = {};
     },
-    
+    setUserObject(state, user) {
+        state.userObject = user
+    }
 };
 
 export const account = {

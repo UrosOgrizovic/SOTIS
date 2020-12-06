@@ -5,7 +5,8 @@ import { authHeader } from '../helpers';
 export const examService = {
     getAll,
     submitExam,
-    getPersonalizedExams
+    getPersonalizedExams,
+    addNewExam
 };
 
 function getAll() {
@@ -20,6 +21,26 @@ function getAll() {
         .then(handleResponse)
         .then(exams => {
             return exams.results;
+        });
+}
+
+function addNewExam(data) {
+    const token = JSON.parse(localStorage.getItem('user')).token;
+    
+    const headers = authHeader();
+    headers['Content-Type'] = 'application/json';
+    headers['X-CSRFToken'] = token;
+
+    const requestOptions = {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(data)
+    };
+
+    return fetch(`${config.apiUrl}/exams/`, requestOptions)
+        .then(handleResponse)
+        .then(result => {
+            return result;
         });
 }
 

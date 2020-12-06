@@ -7,6 +7,7 @@ import Register from '../components/Register'
 import Domains from '../components/Domains'
 import Exams from '../components/Exams'
 import Exam from '../components/Exam'
+import ExamForm from '../components/ExamForm'
 
 
 Vue.use(Router);
@@ -20,6 +21,7 @@ export const router = new Router({
     { path: '/exams/:exam_id', name: 'single_exam', component: Exam},
     { path: '/exams', component: Exams},
     { path: '/domains', component: Domains},
+    { path: '/new-exam', component: ExamForm},
 
     // otherwise redirect to home
     { path: '*', redirect: '/' }
