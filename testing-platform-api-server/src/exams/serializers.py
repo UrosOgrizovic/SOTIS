@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from src.exams.models import Choice, Question, Exam, ExamResult, Domain, Subject
+from src.exams.models import Choice, Question, Exam, ExamResult, Domain, Subject, Problem, ProblemAttachment
 from src.users.serializers import UserSerializer
 
 
@@ -42,20 +42,32 @@ class ExamResultSerializer(serializers.ModelSerializer):
         model = ExamResult
         fields = ['id', 'score']
 
-class DomainSerializer(serializers.ModelSerializer):
-    subject = SubjectSerializer(many=False)
-
-    class Meta:
-        model = Domain
-        exclude = ()
-
-class SubjectSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Subject
-        exclude = ()
 
 class CreateExamSerializer(serializers.ModelSerializer):
     class Meta:
         model = Exam
+        exclude = ()
+
+
+class ProblemAttachmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProblemAttachment
+        exclude = ()
+
+
+class ProblemSerializer(serializers.ModelSerializer):
+    source_problems = ProblemAttachmentSerializer(many=True)
+    target_problems = ProblemAttachmentSerializer(many=True)
+
+    class Meta:
+        model = Problem
+        exclude = ()
+
+
+class DomainSerializer(serializers.ModelSerializer):
+    subject = SubjectSerializer(many=False)
+    problems = ProblemSerializer(many=True)
+
+    class Meta:
+        model = Domain
         exclude = ()

@@ -3,7 +3,8 @@ import { authHeader } from '../helpers';
 
 
 export const domainService = {
-    getAll
+    getAll,
+    get
 };
 
 function getAll() {
@@ -19,6 +20,23 @@ function getAll() {
         .then(handleResponse)
         .then(domains => {
             return domains.results;
+        });
+}
+
+function get(id) {
+    const headers = authHeader();
+    headers['Content-Type'] = 'application/json';
+    
+    const requestOptions = {
+        method: 'GET',
+        headers: headers
+    };
+
+    
+    return fetch(`${config.apiUrl}/domains/${id}`, requestOptions)
+        .then(handleResponse)
+        .then(domain => {
+            return domain;
         });
 }
 

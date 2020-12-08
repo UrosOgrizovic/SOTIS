@@ -8,6 +8,7 @@ from src.exams.models import Exam, Question, Choice, Domain, Problem, Subject
 from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer, ExamResultSerializer, DomainSerializer, \
     SubjectSerializer, CreateExamSerializer
 
+
 class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                   mixins.CreateModelMixin, mixins.ListModelMixin,
                   viewsets.GenericViewSet):
@@ -128,11 +129,11 @@ class DomainViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.L
             return self.queryset.none()
 
     @action(detail=True, methods=['get'], url_path='personalized_exams')
-    def personalized_problems(self, request, pk):
+    def personalized_exams(self, request, pk):
         nodes_to_check = list(self.queryset.get(pk=pk).problems.all())
         nodes_to_return = []
 
-        while(len(nodes_to_check)):
+        while len(nodes_to_check):
             current_node = nodes_to_check.pop()
             if self.request.user.passed_exams.filter(problem=current_node).exists():
                 nodes_to_check += Problem.objects.filter(pk__in=current_node.target_problems.all().values_list('target'))
