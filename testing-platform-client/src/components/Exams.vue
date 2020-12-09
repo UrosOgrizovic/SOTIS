@@ -151,6 +151,15 @@ export default {
                         .attr("x2", function(d) { return d.target.x; })
                         .attr("y2", function(d) { return d.target.y; });
 
+                    var tooltip = g.append("g")
+                                .append("text")
+                                .style("visibility", "hidden")
+                                .style("background", "#fff")
+                                .attr("y", 60)
+                                .attr("x", 100)
+                                .text("a simple tooltip");
+
+                    // add nodes
                     g.append("g")
                         .attr("stroke", "black")
                         .attr("stroke-width", 1.5)
@@ -158,10 +167,34 @@ export default {
                         .data(nodes)
                         .enter().append("circle")
                         .attr("cx", function(d) { return d.id * 100; })
-                        // .attr("cy", function(d) { return d.y; })
-                        .attr("cy", 100)
-                        .attr("r", 10)
-                        .attr("fill", "white");
+                        .attr("cy", 100)    // TODO: make it work with levels
+                        .attr("r", 15)
+                        .attr("fill", "white")
+                        .on("mouseover", function(d, i) {
+                            d3.select(this).attr("fill", "orange");
+                            d3.select(this).attr("r", 30);
+                            console.log(d, i);
+                            tooltip.style("visibility", "visible");
+                            tooltip.text(i.title);
+                            return tooltip.attr("x", i.id * 100 - 50);
+                        })
+                        .on("mouseout", function(d, i) {
+                            d3.select(this).attr("fill", "white");
+                            d3.select(this).attr("r", 15);
+                            console.log(d, i);
+                            return tooltip.style("visibility", "hidden");
+                        });
+
+                    // add text
+                    g.append("g")
+                        .selectAll("circle")
+                        .data(nodes)
+                        .enter()
+                        .append("text")
+                        .text(function(d) {return d.id; })
+                        .attr('x', function(d) {return d.id * 100 - 5; })
+                        .attr('y', 105);
+                        
                 });
 
                 // let node = svg.append("g").selectAll("g").data(nodes).enter().append("g");
