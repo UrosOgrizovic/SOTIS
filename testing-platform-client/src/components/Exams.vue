@@ -31,13 +31,18 @@
         </div>
         <div v-else>
             <div v-if="currentDomain">
-                    
-                
             </div>
                 <router-link to="new-exam">New Exam</router-link>   
                 <br>
-                <svg id="dataviz_area"></svg>
-                {{currentDomain.problems}}
+                <svg id="dataviz_area">
+                    <!-- <defs>
+                        <marker id="markerArrow" markerWidth="13" markerHeight="13" refX="2" refY="6"
+                            orient="auto">
+                            <path d="M2,2 L2,11 L10,6 L2,2" style="fill: #000000; stroke-width: 10px;" />
+                        </marker>
+                    </defs> -->
+                </svg>
+                <!-- {{currentDomain.problems}} -->
                 {{init(currentDomain.problems)}}
         </div>
         
@@ -91,38 +96,44 @@ export default {
             this.$router.push({name: 'single_exam', params: {'exam_id': chosenExam.id}})
         },
         init(problems) {
-            console.log('u init');
-            
-            // console.log(data);
             if (problems) {
-
                 var svg = d3.select("#dataviz_area").
                 attr("width", this.chartOptions.width)
                 .attr("height", this.chartOptions.height)
-                // .selectAll("g").data(problems)
-                // .enter().append("g")    // add one g element for each node, so as to allow centering text in node
                 .style(
                     "transform",
                     `translate(${this.chartOptions.margin.left}px, ${this.chartOptions.margin.top}px)`
                 );
 
+                svg.append("svg:defs")
+                    .append("svg:marker")
+                    .attr("id", "markerArrow")
+                    .attr("markerWidth", "13")
+                    .attr("markerHeight", "13")
+                    .attr("refX", "6")
+                    .attr("refY", "6")
+                    .attr("orient", "auto")
+                    .attr("markerUnits","strokeWidth")
+                    .attr("stroke-width","13")
+                    .append("svg:path").attr("d", "M0,0 L0,6 L9,3 z").attr("fill","red");
+
                 var g = svg.append("g");
 
                 let nodes = problems.map(problem => ({id: problem.id, title: problem.title, x: problem.id * 100, y: 100}));
-                
+
                 var links = [];
                 for (let problem of problems) {
                     for (let target_problem of problem.target_problems) {
-                        links.push({source: {id: problem.id, x: problem.id * 100, y: 100}, target: {id: nodes[target_problem.id].id, x: target_problem.target * 100, y: 100}})
+                        links.push({source: {id: problem.id, x: problem.id * 100, y: 100}, target: {id: target_problem.target, x: target_problem.target * 100, y: 100}})
                     }
                 }
 
-                var simulation = d3.forceSimulation(nodes)
-                    .force("charge", d3.forceManyBody().strength(-80))
-                    .force("link", d3.forceLink(links).distance(20).strength(1).iterations(10))
-                    .force("x", d3.forceX())
-                    .force("y", d3.forceY())
-                    .stop();
+                var simulation = d3.forceSimulation(nodes);
+                    // .force("charge", d3.forceManyBody().strength(5))
+                    // .force("link", d3.forceLink(links).distance(20).strength(1).iterations(10))
+                    // .force("x", d3.forceX())
+                    // .force("y", d3.forceY())
+                    // .stop();
 
                 var loading = svg.append("text")
                     .attr("dy", "0.35em")
@@ -141,15 +152,19 @@ export default {
                     }
 
                     g.append("g")
+                        .selectAll("path")
+                        .data(links)
+                        .enter().append("path")
+                        .attr("d", function(d) {
+                            return "M" + d.source.x + "," + d.source.y +
+                                        " A10,10" 
+                                        + " 0 0,0" + " " +
+                                         d.target.x + "," + d.target.y;
+                        })
                         .attr("stroke", "#000")
                         .attr("stroke-width", 1.5)
-                        .selectAll("line")
-                        .data(links)
-                        .enter().append("line")
-                        .attr("x1", function(d) { return d.source.x; })
-                        .attr("y1", function(d) { return d.source.y; })
-                        .attr("x2", function(d) { return d.target.x; })
-                        .attr("y2", function(d) { return d.target.y; });
+                        .attr("fill", "none")
+                        .attr("marker-end", "url(#markerArrow)");
 
                     var tooltip = g.append("g")
                                 .append("text")
@@ -170,18 +185,18 @@ export default {
                         .attr("cy", 100)    // TODO: make it work with levels
                         .attr("r", 15)
                         .attr("fill", "white")
-                        .on("mouseover", function(d, i) {
+                        .on("mouseover", function(event, i) {
                             d3.select(this).attr("fill", "orange");
                             d3.select(this).attr("r", 30);
-                            console.log(d, i);
+                            if (event) {console.log();} // rebel against no-unused-vars!!
                             tooltip.style("visibility", "visible");
                             tooltip.text(i.title);
                             return tooltip.attr("x", i.id * 100 - 50);
                         })
-                        .on("mouseout", function(d, i) {
+                        .on("mouseout", function(event, i) {
                             d3.select(this).attr("fill", "white");
                             d3.select(this).attr("r", 15);
-                            console.log(d, i);
+                            if (event && i) {console.log();} // rebel against no-unused-vars!!
                             return tooltip.style("visibility", "hidden");
                         });
 
@@ -195,19 +210,7 @@ export default {
                         .attr('x', function(d) {return d.id * 100 - 5; })
                         .attr('y', 105);
                         
-                });
-
-                // let node = svg.append("g").selectAll("g").data(nodes).enter().append("g");
-
-                // node.append("circle").style("fill", "white").attr("stroke", "black");
-
-                // // let link = svg.selectAll("line").data(links).enter().append("line").style("stroke", "#aaa");
-                // // let link = svg.append("line").style("stroke", "#aaa").attr("marker-end", "url(#arrow)");
-                // let link = svg.append("g").selectAll("line").data(links).enter().append("line").style("stroke", "#aaa").attr("marker-end", "url(#arrow)");
-
-                // // let text = svg.append("text").text(function(d) {return d.id})
-                // // let text = svg.append("g").selectAll("g").append("text").text(function(d) {return d.id})
-                // let text = node.append("text").text(function(d) {return d.id})                
+                });               
             }
             
         }
