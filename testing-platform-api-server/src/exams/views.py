@@ -1,4 +1,3 @@
-from numpy.testing._private.parameterized import param
 from rest_framework import viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
