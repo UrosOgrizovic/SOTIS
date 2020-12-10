@@ -10,7 +10,8 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
 from src.users.urls import usersRouter
-from src.exams.urls import examsRouter, questionsRouter, choicesRouter, domainsRouter, subjectsRouter
+from src.exams.urls import examsRouter, questionsRouter, choicesRouter, domainsRouter, subjectsRouter, \
+    problemAttachmentRouter
 
 schema_view = get_schema_view(
     openapi.Info(title="Pastebin API", default_version='v1'),
@@ -25,7 +26,7 @@ router.registry.extend(questionsRouter.registry)
 router.registry.extend(choicesRouter.registry)
 router.registry.extend(domainsRouter.registry)
 router.registry.extend(subjectsRouter.registry)
-
+router.registry.extend(problemAttachmentRouter.registry)
 
 urlpatterns = [
     # admin panel

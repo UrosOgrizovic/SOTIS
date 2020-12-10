@@ -1,6 +1,6 @@
 import { domainService } from '../services';
 
-const state = {domains: [], currentDomain: {}};
+const state = {domains: [], currentDomain: {}, createdNewLink: {}};
 
 const actions = {
     fetchAllDomains({ commit }) {
@@ -12,6 +12,11 @@ const actions = {
         domainService.get(domainId).then(domain => {
             commit('setCurrentDomain', domain);
         })
+    },
+    createLink({ commit }, link) {
+        domainService.createLink(link).then(result => {
+            commit('setLink', result);
+        })
     }
 };
 
@@ -21,6 +26,9 @@ const mutations = {
     },
     setCurrentDomain(state, domain) {
         state.currentDomain = domain;
+    },
+    setLink(state, createdNewLink) {
+        state.createdNewLink = createdNewLink;
     }
 };
 
@@ -30,6 +38,9 @@ const getters = {
     },
     getCurrentDomain(state) {
         return state.currentDomain;
+    },
+    getCreatedNewLink(state) {
+        return state.createdNewLink;
     }
 };
 

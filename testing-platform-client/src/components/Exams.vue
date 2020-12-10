@@ -34,6 +34,7 @@
             </div>
                 <router-link to="new-exam">New Exam</router-link>   
                 <br>
+                <h4>Add edges by clicking on a source node, then clicking on a target node. Cycles are not allowed.</h4>
                 <svg id="dataviz_area">
                     <!-- <defs>
                         <marker id="markerArrow" markerWidth="13" markerHeight="13" refX="2" refY="6"
@@ -42,7 +43,6 @@
                         </marker>
                     </defs> -->
                 </svg>
-                <!-- {{currentDomain.problems}} -->
                 {{init(currentDomain.problems)}}
         </div>
         
@@ -81,11 +81,12 @@ export default {
         }),
         ...mapGetters({exams: 'exams/getAllExams'}),
         ...mapGetters({currentDomain: 'domains/getCurrentDomain'}),
+        ...mapGetters({createdNewLink: 'domains/getCreatedNewLink'}),
     },
     methods: {
         ...mapActions('exams', ['fetchPersonalizedExams', 'fetchAllExams']),
         ...mapActions('account', ['fetchUserObject']),
-        ...mapActions('domains', ['fetchDomain']),
+        ...mapActions('domains', ['fetchDomain', 'createLink']),
 
         chooseExam(index) {
             if (!this.exams.length) {
@@ -129,11 +130,6 @@ export default {
                 }
 
                 var simulation = d3.forceSimulation(nodes);
-                    // .force("charge", d3.forceManyBody().strength(5))
-                    // .force("link", d3.forceLink(links).distance(20).strength(1).iterations(10))
-                    // .force("x", d3.forceX())
-                    // .force("y", d3.forceY())
-                    // .stop();
 
                 var loading = svg.append("text")
                     .attr("dy", "0.35em")
@@ -141,6 +137,9 @@ export default {
                     .attr("font-family", "sans-serif")
                     .attr("font-size", 10)
                     .text("Simulating. One moment please…");
+
+
+                let ref = this;
 
                 // Use a timeout to allow the rest of the page to load first.
                 d3.timeout(function() {
@@ -151,7 +150,9 @@ export default {
                         simulation.tick();
                     }
 
+                    // add paths
                     g.append("g")
+                        .attr("id", "paths")
                         .selectAll("path")
                         .data(links)
                         .enter().append("path")
@@ -174,6 +175,9 @@ export default {
                                 .attr("x", 100)
                                 .text("a simple tooltip");
 
+                    
+                    let newLink = {source: {id: null, x: null, y: 100}, target: {id: null, x: null, y: 100}}
+
                     // add nodes
                     g.append("g")
                         .attr("stroke", "black")
@@ -185,6 +189,7 @@ export default {
                         .attr("cy", 100)    // TODO: make it work with levels
                         .attr("r", 15)
                         .attr("fill", "white")
+                        .attr("id", function(d) {return d.id;})
                         .on("mouseover", function(event, i) {
                             d3.select(this).attr("fill", "orange");
                             d3.select(this).attr("r", 30);
@@ -194,10 +199,67 @@ export default {
                             return tooltip.attr("x", i.id * 100 - 50);
                         })
                         .on("mouseout", function(event, i) {
-                            d3.select(this).attr("fill", "white");
+                            if (!(newLink.source.id == i.id || newLink.target.id == i.id)) {
+                                d3.select(this).attr("fill", "white");
+                            }
+                            
                             d3.select(this).attr("r", 15);
                             if (event && i) {console.log();} // rebel against no-unused-vars!!
                             return tooltip.style("visibility", "hidden");
+                        })
+                        .on("click", function(event, i) {
+                            if (!newLink.source.id) {
+                                newLink.source = {id: i.id, x: i.id * 100, y: 100}; // start edge here
+                                d3.select(this).attr("fill", "#00ffff");
+                            } else {
+                                if (newLink.source.id == i.id) { // deselect node if double-clicked
+                                    d3.select(this).attr("fill", "white");
+                                    // reset newLink
+                                    newLink = {source: {id: null, x: null, y: 100}, target: {id: null, x: null, y: 100}}
+                                } else {
+                                    newLink.target = {id: i.id, x: i.id * 100, y: 100}; // end edge here
+                                    let sourceNode = d3.selectAll("circle").filter(function(d) {
+                                        return d.id == newLink.source.id;   // select source node by id
+                                    });
+                                    let targetNode = d3.selectAll("circle").filter(function(d) {
+                                        return d.id == newLink.target.id;   // select source node by id
+                                    });
+                                    
+                                    ref.createLink({domainId: ref.currentDomain.id, source: newLink.source.id, target: newLink.target.id});
+                                    setTimeout(function(){ 
+                                        let res = ref.createdNewLink;
+                                        if (res) {
+                                             // draw path from newLink.source to newLink.target
+                                            d3.select("#paths")
+                                            .data([newLink]).append("path")
+                                            .attr("d", function(d) {
+                                                return "M" + d.source.x + "," + d.source.y +
+                                                            " A10,10" 
+                                                            + " 0 0,0" + " " +
+                                                            d.target.x + "," + d.target.y;
+                                            })
+                                            .attr("stroke", "#000")
+                                            .attr("stroke-width", 1.5)
+                                            .attr("fill", "none")
+                                            .attr("marker-end", "url(#markerArrow)");
+                                            // reset data
+                                            // sourceNode.attr("fill", "white"); // success - deselect source node
+                                            // targetNode.attr("fill", "white"); // success - deselect source node
+                                            links.push(newLink);
+                                            // newLink = {source: {id: null, x: null, y: 100}, target: {id: null, x: null, y: 100}}    // success - reset newLink
+                                            }
+                                        // else {
+                                            
+                                        // }
+                                        // reset data
+                                        sourceNode.attr("fill", "white");   // failure - deselect source node
+                                        targetNode.attr("fill", "white"); // failure - deselect source node
+                                        newLink = {source: {id: null, x: null, y: 100}, target: {id: null, x: null, y: 100}}    // failure - reset newLink
+                                    }, 100);
+                                }
+
+                                
+                            }
                         });
 
                     // add text
@@ -217,9 +279,6 @@ export default {
     },
     mounted() {
         this.fetchUserObject();
-        
-        // this.init();
-
         if (this.$route.query.domain_id) {
             this.fetchPersonalizedExams({id: this.$route.query.domain_id});
             this.fetchDomain(this.$route.query.domain_id);

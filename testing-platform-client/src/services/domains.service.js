@@ -4,7 +4,8 @@ import { authHeader } from '../helpers';
 
 export const domainService = {
     getAll,
-    get
+    get,
+    createLink
 };
 
 function getAll() {
@@ -31,12 +32,35 @@ function get(id) {
         method: 'GET',
         headers: headers
     };
-
     
     return fetch(`${config.apiUrl}/domains/${id}`, requestOptions)
         .then(handleResponse)
         .then(domain => {
             return domain;
+        });
+}
+
+function createLink(link) {
+    const token = JSON.parse(localStorage.getItem('user')).token;
+    
+    const headers = authHeader();
+    headers['Content-Type'] = 'application/json';
+    headers['X-CSRFToken'] = token;
+
+    const requestOptions = {
+        // method: 'PUT',
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(link)
+    };
+
+    // return fetch(`${config.apiUrl}/domains/add_problem_attachment/`, requestOptions)
+    return fetch(`${config.apiUrl}/problem_attachments/custom_create/`, requestOptions)
+        .then(handleResponse)
+        .then(result => {
+            if (typeof result === "string")
+                return false;
+            return true;
         });
 }
 
