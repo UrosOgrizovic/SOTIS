@@ -5,7 +5,8 @@ export const userService = {
     login,
     logout,
     register,
-    fetchUserObject
+    fetchUserObject,
+    fetchStudents
 };
 
 function login(username, password) {
@@ -55,6 +56,21 @@ function fetchUserObject() {
         .then(handleResponse)
         .then(user => {
             return user;
+        });
+}
+
+function fetchStudents() {
+    const headers = authHeader();
+    headers['Content-Type'] = 'application/json';
+    const requestOptions = {
+        method: 'GET',
+        headers: headers
+    };
+
+    return fetch(`${config.apiUrl}/users/students`, requestOptions)
+        .then(handleResponse)
+        .then(users => {
+            return users;
         });
 }
 

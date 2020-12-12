@@ -21,7 +21,7 @@
             </el-table-column>
             <el-table-column
                 fixed="right"
-                label="Operations"
+                label="Actions"
                 width="120">
                 <template slot-scope="scope">
                     <el-button @click="chooseExam(scope.$index)" type="text" size="small">Choose</el-button>

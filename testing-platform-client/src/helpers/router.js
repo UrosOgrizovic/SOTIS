@@ -8,7 +8,7 @@ import Domains from '../components/Domains'
 import Exams from '../components/Exams'
 import Exam from '../components/Exam'
 import ExamForm from '../components/ExamForm'
-
+import SubjectForm from '../components/SubjectForm'
 
 Vue.use(Router);
 
@@ -22,6 +22,7 @@ export const router = new Router({
     { path: '/exams', component: Exams},
     { path: '/domains', component: Domains},
     { path: '/new-exam', component: ExamForm},
+    { path: '/new-subject', component: SubjectForm },
 
     // otherwise redirect to home
     { path: '*', redirect: '/' }

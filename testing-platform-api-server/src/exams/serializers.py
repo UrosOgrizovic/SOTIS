@@ -49,11 +49,6 @@ class DomainSerializer(serializers.ModelSerializer):
         model = Domain
         exclude = ()
 
-class SubjectSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Subject
-        exclude = ()
 
 class CreateExamSerializer(serializers.ModelSerializer):
     class Meta:

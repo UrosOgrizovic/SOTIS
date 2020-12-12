@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from rest_framework import viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
@@ -7,7 +8,7 @@ from rest_framework import status
 from src.exams.models import Exam, Question, Choice, Domain, Problem, Subject
 from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer, ExamResultSerializer, DomainSerializer, \
     SubjectSerializer, CreateExamSerializer
-
+from src.users.models import User
 class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                   mixins.CreateModelMixin, mixins.ListModelMixin,
                   viewsets.GenericViewSet):
@@ -57,9 +58,10 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class SubjectViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin):
+class SubjectViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin,
+                     mixins.ListModelMixin, mixins.CreateModelMixin):
     """
-        Lists, Retrieves - Subjects
+        Lists, Retrieves, Creates - Subjects
     """
 
     queryset = Subject.objects.all()
@@ -107,7 +109,8 @@ class ChoiceViewSet(viewsets.GenericViewSet,
     permission_classes = [IsAuthenticated]
 
 
-class DomainViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin):
+class DomainViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin,
+                    mixins.ListModelMixin, mixins.DestroyModelMixin):
     """
     List and Retrieve - Domains
     """
@@ -140,3 +143,8 @@ class DomainViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.L
                 nodes_to_return.append(current_node.exam)
 
         return Response(ExamSerializer(nodes_to_return, many=True).data)
+
+    @action(detail=True, methods=['patch'], url_path='add-student')
+    def add_student(self, request, pk):
+        self.get_object().subject.students.add(User.objects.get(pk=request.data.get('id')))
+        return HttpResponse('')

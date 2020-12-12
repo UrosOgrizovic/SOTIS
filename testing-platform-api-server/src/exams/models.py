@@ -1,7 +1,7 @@
 from django.db import models
 from django.conf import settings
-
 from django.utils.html import strip_tags
+from django.dispatch import receiver
 
 class Subject(models.Model):
     title = models.CharField(max_length=255, null=True)
@@ -72,3 +72,9 @@ class Problem(models.Model):
 class ProblemAttachment(models.Model):
     source = models.ForeignKey(Problem, on_delete=models.CASCADE, related_name='target_problems', null=True, blank=True)
     target = models.ForeignKey(Problem, on_delete=models.CASCADE, related_name='source_problems', null=True, blank=True)
+
+
+@receiver(models.signals.post_save, sender=Subject)
+def create_domain_on_subject_create(sender, instance, created, **kwargs):
+    if created:
+        Domain.objects.create(subject=instance, title=instance.title)
