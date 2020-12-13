@@ -21,13 +21,16 @@
             </el-table-column>
             <el-table-column
                 fixed="right"
-                label="Operations"
-                width="120">
+                label="Actions"
+                width="240">
                 <template slot-scope="scope">
+                    <el-button v-if="belongsToGroup('Teacher')" @click="openDeleteExamModal(scope.$index)" type="text" size="small">Remove</el-button>
                     <el-button @click="chooseExam(scope.$index)" type="text" size="small">Choose</el-button>
                 </template>
             </el-table-column>
         </el-table>
+        <confirm-modal title="Are you sure?" ref="confirm"></confirm-modal>
+
         </div>
         <div v-else>
             <div v-if="currentDomain">
@@ -68,15 +71,18 @@
                 
                 {{init(currentDomain.problems)}}
         </div>
-        
     </div>
 </template>
 
 <script>
 import { mapState, mapGetters, mapActions } from 'vuex'
 import * as d3 from 'd3'
+import ConfirmModal from './ConfirmModal';
 
 export default {
+    components: {
+        ConfirmModal
+    },
     data() {
         return {
             show: false,
@@ -111,10 +117,9 @@ export default {
         ...mapGetters({unattachedExams: 'domains/getUnattachedExams'})
     },
     methods: {
-        ...mapActions('exams', ['fetchPersonalizedExams', 'fetchAllExams']),
+        ...mapActions('exams', ['fetchPersonalizedExams', 'fetchAllExams', 'deleteExam']),
         ...mapActions('account', ['fetchUserObject']),
         ...mapActions('domains', ['fetchDomain', 'createLink', 'createNode', 'getUnattachedExamsForDomainId']),
-
         chooseExam(index) {
             if (!this.exams.length) {
                 console.log("Exams list is empty!")
@@ -355,90 +360,16 @@ export default {
                     ref.fetchDomain(ref.currentDomain.id);
                     ref.getUnattachedExamsForDomainId(ref.currentDomain.id);
                     ref.init(ref.currentDomain.problems);
-                    // console.log(ref.currentDomain); // ako je ovde dodat novi problem u probleme, odkomentarisi liniju ispod i probaj tako
-                    // this.init(this.currentDomain.problems);
-
-
-
-
-
-
-
-
-
-
-                    // let newNode = {id: nodes[nodes.length - 1].id + 1, title: "bla", x: nodes[nodes.length - 1].x + 50, y: 200};
-                    // nodes.push(newNode);
-
-                    // d3.select("#nodes")
-                    // .data([newNode]).append("circle")
-                    // .attr("cx", function(d) {return d.x;})
-                    // .attr("cy", function(d) {return d.y;})
-                    // .attr("r", 15)
-                    // .attr("fill", "white")
-                    // .on("click", function(event, i) {
-                    //     if (!ref.newLink.source.id) {
-                    //         ref.newLink.source = {id: i.id, x: i.id * 100 / 2, y: 200}; // start edge here
-                    //         d3.select(this).attr("fill", "#00ffff");
-                    //     } else {
-                    //         if (ref.newLink.source.id == i.id) { // deselect node if double-clicked
-                    //             d3.select(this).attr("fill", "white");
-                    //             // reset newLink
-                    //             ref.newLink = {source: {id: null, x: null, y: 200}, target: {id: null, x: null, y: 200}}
-                    //         } else {
-                    //             ref.newLink.target = {id: i.id, x: i.id * 100 / 2, y: 200}; // end edge here
-                    //             let sourceNode = d3.selectAll("circle").filter(function(d) {
-                    //                 return d.id == ref.newLink.source.id;   // select source node by id
-                    //             });
-                    //             let targetNode = d3.selectAll("circle").filter(function(d) {
-                    //                 return d.id == ref.newLink.target.id;   // select source node by id
-                    //             });
-                                
-                    //             ref.createLink({domainId: ref.currentDomain.id, source: ref.newLink.source.id, target: ref.newLink.target.id});
-                    //             setTimeout(function(){ 
-                    //                 if (ref.isDomainNewLink) {
-                    //                      // draw path from newLink.source to newLink.target
-                    //                     d3.select("#paths")
-                    //                     .data([ref.newLink]).append("path")
-                    //                     .attr("d", function(d) {
-                    //                         return "M" + d.source.x + "," + d.source.y +
-                    //                                     " A10,10" 
-                    //                                     + " 0 0,0" + " " +
-                    //                                     d.target.x + "," + d.target.y;
-                    //                     })
-                    //                     .attr("stroke", "#000")
-                    //                     .attr("stroke-width", 1.5)
-                    //                     .attr("fill", "none")
-                    //                     .attr("marker-end", "url(#markerArrow)");
-                    //                     links.push(ref.newLink);
-                    //                     }
-                    //                 // reset data
-                    //                 sourceNode.attr("fill", "white");   // deselect source node
-                    //                 targetNode.attr("fill", "white"); // deselect source node
-                    //                 ref.newLink = {source: {id: null, x: null, y: 200}, target: {id: null, x: null, y: 200}}    // reset newLink
-                    //             }, 100);
-                    //         }
-                    //     }
-                    // });
-                    // // add text
-                    // g.append("g")
-                    // .attr("id", "texts")
-                    // .selectAll("circle")
-                    // .data([newNode])
-                    // .enter()
-                    // .append("text")
-                    // .text(function(d) {return d.id; })
-                    // .attr('x', function(d) {
-                    //     let x = d.id * 100 / 2 - 5;
-                    //     if (d.id > 9) {
-                    //         x -= 5;
-                    //     }
-                    //     return x; 
-                    // })
-                    // .attr('y', 205);
                 }
             }, 100)
-        }
+        },
+        openDeleteExamModal(index) {
+            this.$refs.confirm.show().then(() => {
+                const chosenExam = this.exams[index]
+                this.deleteExam(chosenExam)
+            })
+            .catch(() => {});
+        },
     },
     mounted() {
         this.fetchUserObject();

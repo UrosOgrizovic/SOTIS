@@ -27,6 +27,16 @@ const actions = {
         domainService.getUnattachedExamsForDomainId(domainId).then(unattachedExams => {
             commit('setUnattachedExams', unattachedExams);
         })
+    },
+    deleteDomain({ commit }, data) {
+        const id = data.id
+        domainService.deleteDomain(data).then(() => {
+            commit('deleteDomain', id);
+        })
+    },
+    addStudentToDomain({ commit }, data) {
+        console.log(commit)
+        domainService.addStudentToDomain(data);
     }
 };
 
@@ -45,6 +55,10 @@ const mutations = {
     },
     setUnattachedExams(state, unattachedExams) {
         state.unattachedExams = unattachedExams;
+    },
+    deleteDomain(state, id) {
+        const index = state.domains.findIndex(domain => domain.id == id);
+        state.domains.splice(index, 1);
     }
 };
 

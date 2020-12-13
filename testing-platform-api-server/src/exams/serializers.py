@@ -43,10 +43,24 @@ class ExamResultSerializer(serializers.ModelSerializer):
         fields = ['id', 'score']
 
 
-class CreateExamSerializer(serializers.ModelSerializer):
+class CreateQuestionSerializer(serializers.ModelSerializer):
+    choices = ChoiceSerializer(many=True)
+
+    def create(self, validated_data):
+        choices = validated_data.pop('choices')
+        question = Question.objects.create(**validated_data)
+        print(choices)
+        for choice in choices:
+            serializer = ChoiceSerializer(data=choice)
+            serializer.is_valid(raise_exception=True)
+            question.choices.add(serializer.save())
+
+        return question
+
     class Meta:
-        model = Exam
-        exclude = ()
+        model = Question
+        fields = ['id', 'question_text', 'exam', 'choices']
+        depth = 1
 
 
 class ProblemAttachmentSerializer(serializers.ModelSerializer):
@@ -64,6 +78,20 @@ class ProblemSerializer(serializers.ModelSerializer):
     class Meta:
         model = Problem
         exclude = ()
+
+
+class CreateExamSerializer(serializers.ModelSerializer):
+    questions = CreateQuestionSerializer(many=True)
+
+    def create(self, validated_data):
+        questions = validated_data.pop('questions')
+        exam = Exam.objects.create(**validated_data)
+        for question in questions:
+            serializer = CreateQuestionSerializer(data=question)
+            serializer.is_valid(raise_exception=True)
+            exam.questions.add(serializer.save())
+
+        return exam
 
 
 class DomainSerializer(serializers.ModelSerializer):

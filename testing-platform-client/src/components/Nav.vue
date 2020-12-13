@@ -13,7 +13,7 @@
     </el-row>
 </template>
 <script>
-import { mapState } from 'vuex'
+import { mapState, mapActions } from 'vuex'
 
 export default {
     computed: {
@@ -22,11 +22,11 @@ export default {
         }),
     },
     methods: {
-        belongsToGroup(group) {
-            if(this.user && this.user.groups) {
-                return this.user.groups.includes(group);
-            } 
-            return false
+        ...mapActions('account', ['fetchUserObject'])
+    },
+    mounted() {
+        if(!Object.entries(this.user).length) {
+            this.fetchUserObject()
         }
     }
 };

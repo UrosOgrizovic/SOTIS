@@ -1,5 +1,5 @@
 from rest_framework import viewsets, mixins
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
@@ -7,7 +7,8 @@ from rest_framework import status
 from src.users.models import User
 from src.users.permissions import IsUserOrReadOnly
 from src.users.serializers import CreateUserSerializer, UserSerializer
-
+from src.common.constants import USER_GROUP_STUDENT
+from src.users.permissions import IsTeacherUser
 
 class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                   mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -38,3 +39,8 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                             status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': 'Wrong auth token' + e}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'], url_path='students', url_name='students',
+            permission_classes=[IsAuthenticated, IsTeacherUser])
+    def get_students(self, instance):
+        return Response(UserSerializer(self.get_queryset().filter(groups__name=USER_GROUP_STUDENT), many=True).data)

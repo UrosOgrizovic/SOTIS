@@ -16,6 +16,18 @@ Vue.use(VueSimpleAlert)
 
 Vue.config.productionTip = false
 
+Vue.mixin({
+    methods: {
+        belongsToGroup(group) {
+            const user = this.$store.getters['account/getUserObject']
+            if(user && user.groups) {
+                return user.groups.includes(group);
+            } 
+            return false
+        }
+    }
+})
+
 
 new Vue({
     el: '#app',

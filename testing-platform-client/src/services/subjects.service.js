@@ -3,7 +3,8 @@ import { authHeader } from '../helpers';
 
 
 export const subjectService = {
-    getAll
+    getAll,
+    addNewSubject
 };
 
 function getAll() {
@@ -19,6 +20,26 @@ function getAll() {
         .then(handleResponse)
         .then(subjects => {
             return subjects.results;
+        });
+}
+
+function addNewSubject(data) {
+    const token = JSON.parse(localStorage.getItem('user')).token;
+    
+    const headers = authHeader();
+    headers['Content-Type'] = 'application/json';
+    headers['X-CSRFToken'] = token;
+
+    const requestOptions = {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(data)
+    };
+
+    return fetch(`${config.apiUrl}/subjects/`, requestOptions)
+        .then(handleResponse)
+        .then(result => {
+            return result;
         });
 }
 

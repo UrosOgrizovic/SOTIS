@@ -7,7 +7,9 @@ export const domainService = {
     get,
     createLink,
     createNode,
-    getUnattachedExamsForDomainId
+    getUnattachedExamsForDomainId,
+    deleteDomain,
+    addStudentToDomain
 };
 
 function getAll() {
@@ -26,6 +28,7 @@ function getAll() {
         });
 }
 
+
 function get(id) {
     const headers = authHeader();
     headers['Content-Type'] = 'application/json';
@@ -40,6 +43,19 @@ function get(id) {
         .then(domain => {
             return domain;
         });
+}
+
+function deleteDomain(data) {
+    const headers = authHeader();
+    headers['Content-Type'] = 'application/json';
+    
+    const requestOptions = {
+        method: 'DELETE',
+        headers: headers
+    };
+
+    return fetch(`${config.apiUrl}/domains/${data.id}`, requestOptions)
+        .then(() => {})
 }
 
 function getUnattachedExamsForDomainId(id) {
@@ -97,7 +113,22 @@ function createNode(node) {
         .then(handleResponse)
         .then(result => {
             return result;
-        });
+        });       
+}
+
+
+function addStudentToDomain(data) {
+    const headers = authHeader();
+    headers['Content-Type'] = 'application/json';
+    
+    const requestOptions = {
+        method: 'PATCH',
+        headers: headers,
+        body: JSON.stringify({id: data.student})
+    };
+
+    return fetch(`${config.apiUrl}/domains/${data.domain.id}/add-student/`, requestOptions)
+        .then(() => {})
 }
 
 function handleResponse(response) {

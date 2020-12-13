@@ -5,6 +5,7 @@ const user = JSON.parse(localStorage.getItem('user'));
 const state = {
     status: { loggedIn: !!user },
     user: user,
+    students: [],
     userObject: {}
 }
 
@@ -49,6 +50,12 @@ const actions = {
                     commit('setUserObject', user)
                 }
             )
+    },
+    fetchStudents({commit}) {
+        userService.fetchStudents()
+            .then(users => {
+                commit('setStudents', users)
+            })
     }
 };
 
@@ -80,6 +87,19 @@ const mutations = {
     },
     setUserObject(state, user) {
         state.userObject = user
+    },
+    setStudents(state, users) {
+        state.students = [...users]
+    }
+};
+
+
+const getters = {
+    getUserObject(state) {
+        return state.userObject
+    },
+    getStudents(state) {
+        return state.students
     }
 };
 
@@ -87,5 +107,6 @@ export const account = {
     namespaced: true,
     state,
     actions,
-    mutations
+    mutations,
+    getters
 };
