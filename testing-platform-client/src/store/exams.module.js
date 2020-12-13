@@ -32,6 +32,12 @@ const actions = {
         examService.addNewExam(data).then(exam => {
             commit('addExam', exam)
         })
+    },
+    deleteExam({commit}, data) {
+        const id = data.id
+        examService.deleteExam(data).then(() => {
+            commit('deleteExam', id)
+        })
     }
 };
 
@@ -50,6 +56,10 @@ const mutations = {
     },
     addExam(state, exam) {
         state.exams = [...state.exams, exam]
+    },
+    deleteExam(state, id) {
+        const index = state.exams.findIndex(exam => exam.id == id)
+        state.exams.splice(index, 1)
     }
 };
 

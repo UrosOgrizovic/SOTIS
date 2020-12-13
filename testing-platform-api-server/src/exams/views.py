@@ -11,7 +11,7 @@ from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSeri
 from src.users.models import User
 class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                   mixins.CreateModelMixin, mixins.ListModelMixin,
-                  viewsets.GenericViewSet):
+                  mixins.DestroyModelMixin, viewsets.GenericViewSet):
     """
     Creates, Updates and Retrieves - Exams
     """

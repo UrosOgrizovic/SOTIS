@@ -6,7 +6,8 @@ export const examService = {
     getAll,
     submitExam,
     getPersonalizedExams,
-    addNewExam
+    addNewExam,
+    deleteExam
 };
 
 function getAll() {
@@ -62,6 +63,19 @@ function submitExam(examData) {
         .then(result => {
             return result;
         });
+}
+
+function deleteExam(data) {
+    const headers = authHeader();
+    headers['Content-Type'] = 'application/json';
+    
+    const requestOptions = {
+        method: 'DELETE',
+        headers: headers
+    };
+
+    return fetch(`${config.apiUrl}/exams/${data.id}`, requestOptions)
+        .then(() => {})
 }
 
 function getPersonalizedExams(data) {
