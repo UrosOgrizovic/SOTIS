@@ -1,6 +1,6 @@
 import { domainService } from '../services';
 
-const state = {domains: [], currentDomain: {}, createdNewLink: {}};
+const state = {domains: [], currentDomain: {}, isNewLink: false, newNode: {}, unattachedExams: []};
 
 const actions = {
     fetchAllDomains({ commit }) {
@@ -15,7 +15,17 @@ const actions = {
     },
     createLink({ commit }, link) {
         domainService.createLink(link).then(result => {
-            commit('setLink', result);
+            commit('setIsNewLink', result);
+        })
+    },
+    createNode({ commit }, node) {
+        domainService.createNode(node).then(result => {
+            commit('setNode', result);
+        })
+    },
+    getUnattachedExamsForDomainId({ commit }, domainId) {
+        domainService.getUnattachedExamsForDomainId(domainId).then(unattachedExams => {
+            commit('setUnattachedExams', unattachedExams);
         })
     }
 };
@@ -27,8 +37,14 @@ const mutations = {
     setCurrentDomain(state, domain) {
         state.currentDomain = domain;
     },
-    setLink(state, createdNewLink) {
-        state.createdNewLink = createdNewLink;
+    setIsNewLink(state, isNewLink) {
+        state.isNewLink = isNewLink;
+    },
+    setNode(state, newNode) {
+        state.newNode = newNode;
+    },
+    setUnattachedExams(state, unattachedExams) {
+        state.unattachedExams = unattachedExams;
     }
 };
 
@@ -39,8 +55,14 @@ const getters = {
     getCurrentDomain(state) {
         return state.currentDomain;
     },
-    getCreatedNewLink(state) {
-        return state.createdNewLink;
+    getIsNewLink(state) {
+        return state.isNewLink;
+    },
+    getNewNode(state) {
+        return state.newNode;
+    },
+    getUnattachedExams(state) {
+        return state.unattachedExams;
     }
 };
 

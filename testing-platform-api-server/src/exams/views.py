@@ -6,8 +6,7 @@ from rest_framework import status
 
 from src.exams.models import Exam, Question, Choice, Domain, Problem, Subject, ProblemAttachment
 from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer, ExamResultSerializer, \
-    DomainSerializer, \
-    SubjectSerializer, CreateExamSerializer, ProblemAttachmentSerializer
+    DomainSerializer, SubjectSerializer, CreateExamSerializer, ProblemAttachmentSerializer, ProblemSerializer
 
 
 class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
@@ -57,6 +56,21 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
             self.request.user.passed_exams.add(self.get_object())
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'], url_path='getUnattachedExamsForDomainId')
+    def get_unattached_exams_for_domain_id(self, request, pk):
+        """
+        get ids of exams that aren't attached to a problem
+        """
+        exams = [{"id": exam["id"], "title": exam["title"]} for exam in list(Exam.objects.filter(subject_id=pk).values())]
+        attached_exams_ids = [problem["exam_id"] for problem in list(Problem.objects.filter(domain_id=pk).values())]
+        unattached_exams = []
+        for exam in exams:
+            id = exam["id"]
+            if id not in attached_exams_ids:
+                unattached_exams.append(exam)
+
+        return Response(unattached_exams)
 
 
 class SubjectViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin):
@@ -158,41 +172,44 @@ class ProblemAttachmentViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixi
 
     permission_classes = [IsAuthenticated]
 
-    def is_cyclic_util(self, node, visited, recursion_stack, nodes):
+    def is_cyclic_util(self, node, visited, recursion_stack, nodes, index):
         # Mark current node as visited and
         # adds to recursion stack
-        visited[node['id'] - 1] = True
-        recursion_stack[node['id'] - 1] = True
+        visited[index] = True
+        recursion_stack[index] = True
 
         # Recur for all neighbors
         # if any neighbor is visited and in
         # recStack then graph is cyclic
 
-        # for neighbor in self.graph[node]:
         for neighbor in node["neighbors"]:
-            if not visited[neighbor - 1]:
-                # neighbor has to be full node, not just index
-                for n in nodes:
-                    if n['id'] == neighbor:
-                        neighbor = n
-                        break
-                if self.is_cyclic_util(neighbor, visited, recursion_stack, nodes):
+            idx = 0
+            neighbor_node = {}
+            # neighbor has to be full node, not just index
+            for i in range(len(nodes)):
+                if nodes[i]['id'] == neighbor:
+                    idx = i
+                    neighbor_node = nodes[i]
+                    break
+            if not visited[idx]:
+
+                if self.is_cyclic_util(neighbor_node, visited, recursion_stack, nodes, idx):
                     return True
-            elif recursion_stack[neighbor - 1]:
+            elif recursion_stack[idx]:
                 return True
 
         # The node needs to be popped from
         # recursion stack before function ends
-        recursion_stack[node['id'] - 1] = False
+        recursion_stack[index] = False
         return False
 
     def is_cyclic(self, nodes):
         visited = [False] * len(nodes)
         recursion_stack = [False] * len(nodes)
 
-        for node in nodes:
-            if not visited[node['id'] - 1]:
-                if self.is_cyclic_util(node, visited, recursion_stack, nodes):
+        for i in range(len(nodes)):
+            if not visited[i]:
+                if self.is_cyclic_util(nodes[i], visited, recursion_stack, nodes, i):
                     return True
         return False
 
@@ -226,5 +243,27 @@ class ProblemAttachmentViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixi
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(request.data)
-            # ProblemAttachment(new_problem_attachment['source'], new_problem_attachment['target']).save()
         return Response("Failure - this would create a cyclic graph")
+
+
+class ProblemViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
+                     mixins.CreateModelMixin, mixins.ListModelMixin,
+                     viewsets.GenericViewSet):
+    queryset = Problem.objects.all()
+    serializers = {
+        'default': ProblemSerializer,
+    }
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        return self.serializers.get(self.action, self.serializers['default'])
+
+    @action(detail=False, methods=['post'], url_path='custom_create', url_name='custom_create')
+    def custom_make(self, request):
+        new_problem_id = Problem.objects.all().count() + 1
+        new_problem = {"id": new_problem_id, "title": request.data["title"], "exam": request.data["examId"],
+                       "domain": request.data["domainId"], "attached": []}
+        serializer = self.get_serializer(data=new_problem)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(request.data)

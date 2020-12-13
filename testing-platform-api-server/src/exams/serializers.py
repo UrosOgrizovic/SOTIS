@@ -56,8 +56,10 @@ class ProblemAttachmentSerializer(serializers.ModelSerializer):
 
 
 class ProblemSerializer(serializers.ModelSerializer):
-    source_problems = ProblemAttachmentSerializer(many=True)
-    target_problems = ProblemAttachmentSerializer(many=True)
+    """ read_only=True because create() doesn't support writable nested fields by default
+    (used in ProblemViewSet -> custom_make)"""
+    source_problems = ProblemAttachmentSerializer(many=True, read_only=True)
+    target_problems = ProblemAttachmentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Problem

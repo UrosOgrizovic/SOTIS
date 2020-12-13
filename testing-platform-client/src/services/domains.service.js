@@ -5,7 +5,9 @@ import { authHeader } from '../helpers';
 export const domainService = {
     getAll,
     get,
-    createLink
+    createLink,
+    createNode,
+    getUnattachedExamsForDomainId
 };
 
 function getAll() {
@@ -40,6 +42,22 @@ function get(id) {
         });
 }
 
+function getUnattachedExamsForDomainId(id) {
+    const headers = authHeader();
+    headers['Content-Type'] = 'application/json';
+    
+    const requestOptions = {
+        method: 'GET',
+        headers: headers
+    };
+    
+    return fetch(`${config.apiUrl}/exams/${id}/getUnattachedExamsForDomainId`, requestOptions)
+        .then(handleResponse)
+        .then(exams => {
+            return exams;
+        });
+}
+
 function createLink(link) {
     const token = JSON.parse(localStorage.getItem('user')).token;
     
@@ -48,19 +66,37 @@ function createLink(link) {
     headers['X-CSRFToken'] = token;
 
     const requestOptions = {
-        // method: 'PUT',
         method: 'POST',
         headers: headers,
         body: JSON.stringify(link)
     };
 
-    // return fetch(`${config.apiUrl}/domains/add_problem_attachment/`, requestOptions)
     return fetch(`${config.apiUrl}/problem_attachments/custom_create/`, requestOptions)
         .then(handleResponse)
         .then(result => {
             if (typeof result === "string")
                 return false;
             return true;
+        });
+}
+
+function createNode(node) {
+    const token = JSON.parse(localStorage.getItem('user')).token;
+    
+    const headers = authHeader();
+    headers['Content-Type'] = 'application/json';
+    headers['X-CSRFToken'] = token;
+
+    const requestOptions = {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(node)
+    };
+
+    return fetch(`${config.apiUrl}/problems/custom_create/`, requestOptions)
+        .then(handleResponse)
+        .then(result => {
+            return result;
         });
 }
 
