@@ -3,6 +3,7 @@ from django.conf import settings
 from django.utils.html import strip_tags
 from django.dispatch import receiver
 
+
 class Subject(models.Model):
     title = models.CharField(max_length=255, null=True)
     teacher = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
@@ -10,6 +11,7 @@ class Subject(models.Model):
 
     def __str__(self):
         return f'{self.title}'
+
 
 class Exam(models.Model):
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)

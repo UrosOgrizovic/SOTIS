@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from src.exams.models import Choice, Question, Exam, ExamResult, Domain, Subject
+from src.exams.models import Choice, Question, Exam, ExamResult, Domain, Subject, Problem, ProblemAttachment
 from src.users.serializers import UserSerializer
 
 
@@ -42,12 +42,6 @@ class ExamResultSerializer(serializers.ModelSerializer):
         model = ExamResult
         fields = ['id', 'score']
 
-class DomainSerializer(serializers.ModelSerializer):
-    subject = SubjectSerializer(many=False)
-
-    class Meta:
-        model = Domain
-        exclude = ()
 
 class CreateQuestionSerializer(serializers.ModelSerializer):
     choices = ChoiceSerializer(many=True)
@@ -68,6 +62,24 @@ class CreateQuestionSerializer(serializers.ModelSerializer):
         fields = ['id', 'question_text', 'exam', 'choices']
         depth = 1
 
+
+class ProblemAttachmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProblemAttachment
+        exclude = ()
+
+
+class ProblemSerializer(serializers.ModelSerializer):
+    """ read_only=True because create() doesn't support writable nested fields by default
+    (used in ProblemViewSet -> custom_make)"""
+    source_problems = ProblemAttachmentSerializer(many=True, read_only=True)
+    target_problems = ProblemAttachmentSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Problem
+        exclude = ()
+
+
 class CreateExamSerializer(serializers.ModelSerializer):
     questions = CreateQuestionSerializer(many=True)
 
@@ -81,6 +93,11 @@ class CreateExamSerializer(serializers.ModelSerializer):
 
         return exam
 
+
+class DomainSerializer(serializers.ModelSerializer):
+    subject = SubjectSerializer(many=False)
+    problems = ProblemSerializer(many=True)
+
     class Meta:
-        model = Exam
+        model = Domain
         exclude = ()
