@@ -49,8 +49,38 @@ class DomainSerializer(serializers.ModelSerializer):
         model = Domain
         exclude = ()
 
+class CreateQuestionSerializer(serializers.ModelSerializer):
+    choices = ChoiceSerializer(many=True)
+
+    def create(self, validated_data):
+        choices = validated_data.pop('choices')
+        question = Question.objects.create(**validated_data)
+        print(choices)
+        for choice in choices:
+            serializer = ChoiceSerializer(data=choice)
+            serializer.is_valid(raise_exception=True)
+            question.choices.add(serializer.save())
+
+        return question
+
+    class Meta:
+        model = Question
+        fields = ['id', 'question_text', 'exam', 'choices']
+        depth = 1
 
 class CreateExamSerializer(serializers.ModelSerializer):
+    questions = CreateQuestionSerializer(many=True)
+
+    def create(self, validated_data):
+        questions = validated_data.pop('questions')
+        exam = Exam.objects.create(**validated_data)
+        for question in questions:
+            serializer = CreateQuestionSerializer(data=question)
+            serializer.is_valid(raise_exception=True)
+            exam.questions.add(serializer.save())
+
+        return exam
+
     class Meta:
         model = Exam
         exclude = ()

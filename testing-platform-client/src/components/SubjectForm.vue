@@ -1,8 +1,8 @@
 <template>
     <div>
-        <el-form :model="form" label-width="120px">
+        <el-form :model="form" ref="subjectForm" :rules="rules" label-width="120px" style="width: 50%">
             <h2>New Subject</h2>
-            <el-form-item label="Title">
+            <el-form-item label="Title" prop="title">
                 <el-col :span="12"><el-input v-model="form.title"></el-input></el-col>
             </el-form-item>
             <el-form-item>
@@ -20,6 +20,9 @@ export default {
         return {
             form: {
                 title: ''
+            },
+            rules: {
+                title: [{type: 'string', required: true, message: 'Please add the exam title', trigger: 'change'}]
             }
         }
     },
@@ -31,8 +34,12 @@ export default {
     methods: {
         ...mapActions('subjects', ['addNewSubject']),
         onSubmit() {
-            this.addNewSubject({teacher: this.user.id, ...this.form})
-            this.$router.push({path: 'domains'})
+            this.$refs['subjectForm'].validate((valid) => {
+                if (valid) {
+                    this.addNewSubject({teacher: this.user.id, ...this.form});
+                    this.$router.push({path: 'domains'});
+                }
+            });
         }
     }
 }
