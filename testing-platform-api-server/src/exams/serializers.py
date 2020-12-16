@@ -93,6 +93,9 @@ class CreateExamSerializer(serializers.ModelSerializer):
 
         return exam
 
+    class Meta:
+        model = Exam
+        exclude = ()
 
 class DomainSerializer(serializers.ModelSerializer):
     subject = SubjectSerializer(many=False)
