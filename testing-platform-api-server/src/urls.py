@@ -13,8 +13,6 @@ from src.users.urls import usersRouter
 from src.exams.urls import examsRouter, questionsRouter, choicesRouter, domainsRouter, subjectsRouter, \
     problemAttachmentRouter, problemsRouter
 
-import os
-
 schema_view = get_schema_view(
     openapi.Info(title="Pastebin API", default_version='v1'),
     public=True,
@@ -56,5 +54,3 @@ urlpatterns = [
     re_path(r'^$', RedirectView.as_view(url=reverse_lazy('api-root'), permanent=False)),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-# f = open(os.path.join(settings.STATIC_ROOT,'pisa.txt'), 'r')  # how to read pisa.txt
