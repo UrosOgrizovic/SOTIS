@@ -19,6 +19,11 @@ django-activity-stream==0.9.0
 django-money==1.1
 jsonfield==3.1.0
 
+numpy==1.13.1
+
+# Knowledge space
+git+git://github.com/SavaKatic/kst@main
+
 # Rest apis
 djangorestframework==3.11.0
 Markdown==3.2.2

@@ -7,7 +7,9 @@ export const examService = {
     submitExam,
     getPersonalizedExams,
     addNewExam,
-    deleteExam
+    deleteExam,
+    getExamTakers,
+    generateKnowledgeSpace
 };
 
 function getAll() {
@@ -90,6 +92,36 @@ function getPersonalizedExams(data) {
         .then(handleResponse)
         .then(exams => {
             return exams;
+        });
+}
+
+function getExamTakers(examId) {
+    const headers = authHeader();
+    headers['Content-Type'] = 'application/json';
+    const requestOptions = {
+        method: 'GET',
+        headers: headers
+    };
+
+    return fetch(`${config.apiUrl}/exams/${examId}/examTakers`, requestOptions)
+        .then(handleResponse)
+        .then(students => {
+            return students;
+        });
+}
+
+function generateKnowledgeSpace(examId) {
+    const headers = authHeader();
+    headers['Content-Type'] = 'application/json';
+    const requestOptions = {
+        method: 'GET',
+        headers: headers
+    };
+
+    return fetch(`${config.apiUrl}/exams/${examId}/generateKnowledgeSpace`, requestOptions)
+        .then(handleResponse)
+        .then(() => {
+            return [];
         });
 }
 

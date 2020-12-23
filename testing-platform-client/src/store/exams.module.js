@@ -1,6 +1,16 @@
 import { examService, choiceService, questionService } from '../services';
 
-const state = {exams: [], questions: [], choices: [], examResult: {id: 0, choices: [], score: 0}};
+const state = {
+    exams: [],
+    questions: [],
+    choices: [],
+    examResult: {
+        id: 0,
+        choices: [],
+        score: 0
+    },
+    examTakers: []
+};
 
 const actions = {
     fetchAllExams({ commit }) {
@@ -38,6 +48,14 @@ const actions = {
         examService.deleteExam(data).then(() => {
             commit('deleteExam', id)
         })
+    },
+    generateKnowledgeSpace(_, examId) {
+        examService.generateKnowledgeSpace(examId).then(() => {})
+    },
+    fetchExamTakers({ commit }, examId) {
+        examService.getExamTakers(examId).then(students => {
+            commit('setExamTakers', students)
+        });
     }
 };
 
@@ -60,6 +78,9 @@ const mutations = {
     deleteExam(state, id) {
         const index = state.exams.findIndex(exam => exam.id == id)
         state.exams.splice(index, 1)
+    },
+    setExamTakers(state, students) {
+        state.examTakers = [...students];
     }
 };
 
@@ -83,6 +104,9 @@ const getters = {
     },
     getExamScore(state) {
         return state.examResult.score
+    },
+    getExamTakers(state) {
+        return state.examTakers;
     }
 };
 

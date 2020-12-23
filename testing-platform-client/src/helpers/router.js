@@ -9,6 +9,7 @@ import Exams from '../components/Exams'
 import Exam from '../components/Exam'
 import ExamForm from '../components/ExamForm'
 import SubjectForm from '../components/SubjectForm'
+import ExamTakersList from '../components/ExamTakersList'
 
 Vue.use(Router);
 
@@ -19,6 +20,7 @@ export const router = new Router({
     { path: '/login', component: Login },
     { path: '/register', component: Register },
     { path: '/exams/:exam_id', name: 'single_exam', component: Exam},
+    { path: '/exams/:exam_id/students', name: 'exam_takers_list', component: ExamTakersList},
     { path: '/exams', component: Exams},
     { path: '/domains', component: Domains},
     { path: '/new-exam', component: ExamForm},

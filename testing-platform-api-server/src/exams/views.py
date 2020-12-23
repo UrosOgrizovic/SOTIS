@@ -1,3 +1,5 @@
+import numpy as np
+
 from django.http import HttpResponse
 from rest_framework import viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
@@ -5,10 +7,13 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 
-from src.exams.models import Exam, Question, Choice, Domain, Problem, Subject, ProblemAttachment
-from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer, ExamResultSerializer, \
+from src.exams.models import Exam, Question, Choice, Domain, Problem, Subject, ProblemAttachment, ExamResult
+from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer, CreateExamResultSerializer, \
     DomainSerializer, SubjectSerializer, CreateExamSerializer, ProblemAttachmentSerializer, ProblemSerializer
 from src.users.models import User
+from src.users.serializers import UserSerializer
+
+from learning_spaces.kst.iita import iita
 
 
 class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
@@ -25,7 +30,7 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
     def get_serializer_class(self):
         if self.action in ['submit_exam']:
-            return ExamResultSerializer
+            return CreateExamResultSerializer
         return self.serializers.get(self.action, self.serializers['default'])
 
     def get_queryset(self):
@@ -38,14 +43,46 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
     permission_classes = [IsAuthenticated]
 
+    @action(detail=True, methods=['get'], url_path='examTakers', url_name='examTakers')
+    def exam_takers(self, request, pk):
+        user_ids = ExamResult.objects.filter(exam=self.get_object()).values_list('user', flat=True)
+        return Response(UserSerializer(User.objects.filter(pk__in=user_ids), many=True).data)
+
+    @action(detail=True, methods=['get'], url_path='generateKnowledgeSpace', url_name='generateKnowledgeSpace')
+    def generate_knowledge_space(self, request, pk):
+        exam = self.get_object()
+        user_ids = ExamResult.objects.filter(exam=self.get_object()).values_list('user', flat=True)
+
+        correct_answers_matrix = []
+        for user in user_ids:
+            user_questions_array = []
+            for question in exam.questions.all().order_by('id'):
+                should_be_true_answers = question.choices.filter(correct_answer=True).values_list('id', flat=True)
+                should_be_false_answers = question.choices.filter(correct_answer=False).values_list('id', flat=True)
+
+                correct_answer = ExamResult.objects.filter(
+                    user__id=user, exam=exam, choices__in=should_be_true_answers
+                ).exclude(choices__in=should_be_false_answers).exists()
+
+                question_value = 1 if correct_answer else 0
+                user_questions_array.append(question_value)
+
+            correct_answers_matrix.append(user_questions_array)
+
+        ks = iita(np.array([np.array(questions_array) for questions_array in correct_answers_matrix]), 1)
+
+        print(ks)
+
+        return Response()
+
     @action(detail=True, methods=['post'], url_path='submitExam', url_name='submitExam')
     def submit_exam(self, request, pk):
         choices_ids = request.data.get('choices')
         score = Choice.objects.filter(id__in=choices_ids, correct_answer=True, question__exam=pk).count()
 
         serializer = self.get_serializer(data={
-            'exam': self.get_object(),
-            'user': request.user,
+            'exam': self.get_object().id,
+            'user': request.user.id,
             'score': score,
             'choices': choices_ids
         })

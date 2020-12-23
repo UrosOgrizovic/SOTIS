@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div v-if="checkIfStudent">
+        <div>
             <el-table
             :data="exams"
             style="width: 100%">
@@ -22,9 +22,10 @@
             <el-table-column
                 fixed="right"
                 label="Actions"
-                width="240">
+                width="360">
                 <template slot-scope="scope">
                     <el-button v-if="belongsToGroup('Teacher')" @click="openDeleteExamModal(scope.$index)" type="text" size="small">Remove</el-button>
+                    <el-button v-if="belongsToGroup('Teacher')" @click="openStudentList(scope.$index)" type="text" size="small">See student list</el-button>
                     <el-button @click="chooseExam(scope.$index)" type="text" size="small">Choose</el-button>
                 </template>
             </el-table-column>
@@ -32,7 +33,7 @@
         <confirm-modal title="Are you sure?" ref="confirm"></confirm-modal>
 
         </div>
-        <div v-else>
+        <div>
             <div v-if="currentDomain">
             </div>
                 <router-link to="new-exam">New Exam</router-link>   
@@ -127,6 +128,14 @@ export default {
             }
             const chosenExam = this.exams[index]
             this.$router.push({name: 'single_exam', params: {'exam_id': chosenExam.id}})
+        },
+        openStudentList(index) {
+            if (!this.exams.length) {
+                console.log("Exams list is empty!")
+                return;
+            }
+            const chosenExam = this.exams[index]
+            this.$router.push({name: 'exam_takers_list', params: {'exam_id': chosenExam.id}})
         },
         init(problems) {
             
@@ -379,6 +388,7 @@ export default {
             this.fetchDomain(domainId);
             this.getUnattachedExamsForDomainId(domainId);
         } else {
+            console.log('a')
             this.fetchAllExams()
         }
     }
