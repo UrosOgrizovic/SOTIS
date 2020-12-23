@@ -9,7 +9,8 @@ export const examService = {
     addNewExam,
     deleteExam,
     getExamTakers,
-    generateKnowledgeSpace
+    generateKnowledgeSpace,
+    getXML
 };
 
 function getAll() {
@@ -122,6 +123,24 @@ function generateKnowledgeSpace(examId) {
         .then(handleResponse)
         .then(() => {
             return [];
+        });
+}
+
+
+function getXML(examId) {
+    const headers = authHeader();
+    headers['Content-Type'] = 'application/json';
+    const requestOptions = {
+        method: 'GET',
+        headers: headers,
+        responseType: 'blob'
+    };
+
+    return fetch(`${config.apiUrl}/exams/${examId}/getXML`, requestOptions)
+        .then(handleResponse)
+        .then(result => {
+            // var fileURL = window.URL.createObjectURL(new Blob([result]));
+            return result;
         });
 }
 

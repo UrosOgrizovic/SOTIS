@@ -27,6 +27,7 @@
                     <el-button v-if="belongsToGroup('Teacher')" @click="openDeleteExamModal(scope.$index)" type="text" size="small">Remove</el-button>
                     <el-button v-if="belongsToGroup('Teacher')" @click="openStudentList(scope.$index)" type="text" size="small">See student list</el-button>
                     <el-button @click="chooseExam(scope.$index)" type="text" size="small">Choose</el-button>
+                    <el-button v-if="belongsToGroup('Teacher')" @click="downloadXML(scope.$index)" type="text" size="small">Download XML</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -112,13 +113,14 @@ export default {
             }
         }),
         ...mapGetters({exams: 'exams/getAllExams'}),
+        ...mapGetters({xml: 'exams/getXML'}),
         ...mapGetters({currentDomain: 'domains/getCurrentDomain'}),
         ...mapGetters({isDomainNewLink: 'domains/getIsNewLink'}),
         ...mapGetters({domainNewNode: 'domains/getNewNode'}),
-        ...mapGetters({unattachedExams: 'domains/getUnattachedExams'})
+        ...mapGetters({unattachedExams: 'domains/getUnattachedExams'}),
     },
     methods: {
-        ...mapActions('exams', ['fetchPersonalizedExams', 'fetchAllExams', 'deleteExam']),
+        ...mapActions('exams', ['fetchPersonalizedExams', 'fetchAllExams', 'deleteExam', 'fetchXML']),
         ...mapActions('account', ['fetchUserObject']),
         ...mapActions('domains', ['fetchDomain', 'createLink', 'createNode', 'getUnattachedExamsForDomainId']),
         chooseExam(index) {
@@ -136,6 +138,27 @@ export default {
             }
             const chosenExam = this.exams[index]
             this.$router.push({name: 'exam_takers_list', params: {'exam_id': chosenExam.id}})
+        },
+        downloadXML(index) {
+            if (!this.exams.length) {
+                console.log("Exams list is empty!")
+                return;
+            }
+            const chosenExam = this.exams[index];
+            this.fetchXML(chosenExam.id);
+            
+            let ref = this;
+            setTimeout(function(){ 
+                var a = document.createElement("a");
+                document.body.appendChild(a);
+                a.style = "display: none";
+                var    blob = new Blob([ref.xml], {type: "octet/stream"}),
+                    url = window.URL.createObjectURL(blob);
+                a.href = url;
+                a.download = chosenExam.title + ".xml";
+                a.click();
+                window.URL.revokeObjectURL(url);
+            }, 100);
         },
         init(problems) {
             
@@ -388,7 +411,6 @@ export default {
             this.fetchDomain(domainId);
             this.getUnattachedExamsForDomainId(domainId);
         } else {
-            console.log('a')
             this.fetchAllExams()
         }
     }

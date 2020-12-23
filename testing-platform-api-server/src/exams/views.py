@@ -6,6 +6,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
+from django.core.files import File
+
 
 from src.exams.models import Exam, Question, Choice, Domain, Problem, Subject, ProblemAttachment, ExamResult
 from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer, CreateExamResultSerializer, \
@@ -110,6 +112,12 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                 unattached_exams.append(exam)
 
         return Response(unattached_exams)
+
+    @action(detail=True, methods=['get'], url_path='getXML')
+    def getXML(self, request, pk):
+        file = File(open(str(pk) + '.xml', 'r'))
+        data = file.read()
+        return Response(data)
 
 
 class SubjectViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin,
