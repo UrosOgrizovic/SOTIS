@@ -115,8 +115,8 @@ class CreateExamSerializer(serializers.ModelSerializer):
             <qti-correct-response>\n\t'''
             choices = []
             for choice in q.choices.all():
-                choices.append('''<qti-simple-choice identifier="''' + str(choice.id) + '''">''' + choice.choice_text
-                               + '''</qti-simple-choice>\n\t\t\t''')
+                choices.append('''<qti-simple-choice identifier="''' + str(choice.id) + '''">''' + choice.choice_text +
+                               '''</qti-simple-choice>\n\t\t\t''')
                 if choice.correct_answer:
                     correct_answers += '\t\t\t\t<qti-value>' + choice.choice_text + '</qti-value>\n\t\t\t\t'
 
