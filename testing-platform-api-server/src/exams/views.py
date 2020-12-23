@@ -115,7 +115,7 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
     @action(detail=True, methods=['get'], url_path='getXML')
     def getXML(self, request, pk):
-        file = File(open(str(pk) + '.xml', 'r'))
+        file = File(open('../static/' + str(pk) + '.xml', 'r'))
         data = file.read()
         return Response(data)
 
