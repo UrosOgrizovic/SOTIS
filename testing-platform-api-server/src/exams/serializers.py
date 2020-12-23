@@ -41,6 +41,11 @@ class ExamResultSerializer(serializers.ModelSerializer):
         model = ExamResult
         fields = ['id', 'score']
 
+class CreateExamResultSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExamResult
+        fields = ['exam', 'score', 'choices', 'user']
+
 
 class CreateQuestionSerializer(serializers.ModelSerializer):
     choices = ChoiceSerializer(many=True)
