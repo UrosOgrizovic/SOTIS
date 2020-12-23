@@ -9,7 +9,8 @@ const state = {
         choices: [],
         score: 0
     },
-    examTakers: []
+    examTakers: [],
+    xml: {}
 };
 
 const actions = {
@@ -56,6 +57,11 @@ const actions = {
         examService.getExamTakers(examId).then(students => {
             commit('setExamTakers', students)
         });
+    },
+    fetchXML({ commit }, examId) {
+        examService.getXML(examId).then(result => {
+            commit('setXML', result);
+        })
     }
 };
 
@@ -81,6 +87,9 @@ const mutations = {
     },
     setExamTakers(state, students) {
         state.examTakers = [...students];
+    },
+    setXML(state, xml) {
+        state.xml = xml;
     }
 };
 
@@ -107,6 +116,9 @@ const getters = {
     },
     getExamTakers(state) {
         return state.examTakers;
+    },
+    getXML(state) {
+        return state.xml;
     }
 };
 
