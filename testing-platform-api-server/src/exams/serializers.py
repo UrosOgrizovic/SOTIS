@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from django.core.files import File
 
-from src.exams.models import Choice, Question, Exam, ExamResult, Domain, Subject, Problem, ProblemAttachment
+from src.exams.models import Choice, Question, Exam, ExamResult, Domain, Subject, Problem,\
+    ProblemAttachment, ActualProblemAttachment
 from src.users.serializers import UserSerializer
 
 
@@ -15,6 +16,13 @@ class ChoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Choice
         fields = ['id', 'choice_text', 'question']  # don't serialize correct_answer, so that no cheating can occur
+        depth = 1
+
+
+class CreateChoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Choice
+        exclude = ()
         depth = 1
 
 
@@ -48,13 +56,13 @@ class CreateExamResultSerializer(serializers.ModelSerializer):
 
 
 class CreateQuestionSerializer(serializers.ModelSerializer):
-    choices = ChoiceSerializer(many=True)
+    choices = CreateChoiceSerializer(many=True)
 
     def create(self, validated_data):
         choices = validated_data.pop('choices')
         question = Question.objects.create(**validated_data)
         for choice in choices:
-            serializer = ChoiceSerializer(data=choice)
+            serializer = CreateChoiceSerializer(data=choice)
             serializer.is_valid(raise_exception=True)
             ret_val = serializer.save()
             question.choices.add(ret_val)
@@ -72,6 +80,10 @@ class ProblemAttachmentSerializer(serializers.ModelSerializer):
         model = ProblemAttachment
         exclude = ()
 
+class ActualProblemAttachmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ActualProblemAttachment
+        exclude = ()
 
 class ProblemSerializer(serializers.ModelSerializer):
     """ read_only=True because create() doesn't support writable nested fields by default
@@ -79,10 +91,34 @@ class ProblemSerializer(serializers.ModelSerializer):
     source_problems = ProblemAttachmentSerializer(many=True, read_only=True)
     target_problems = ProblemAttachmentSerializer(many=True, read_only=True)
 
+    actual_source_problems = ActualProblemAttachmentSerializer(many=True, read_only=True)
+    actual_target_problems = ActualProblemAttachmentSerializer(many=True, read_only=True)
+
+    question_text = serializers.CharField(write_only=True)
+    choices = serializers.ListField(write_only=True)
+    exam = serializers.IntegerField(write_only=True)
+
     class Meta:
         model = Problem
         exclude = ()
 
+    def create(self, validated_data):
+        question_text = validated_data.pop('question_text')
+        choices = validated_data.pop('choices')
+        exam_id = validated_data.pop('exam')
+
+        exam = Exam.objects.get(pk=exam_id)
+
+        question = Question.objects.create(question_text=question_text, exam=exam)
+        for choice in choices:
+            serializer = CreateChoiceSerializer(data=choice)
+            serializer.is_valid(raise_exception=True)
+            ret_val = serializer.save()
+            question.choices.add(ret_val)
+
+        problem = Problem.objects.create(question=question, **validated_data)
+
+        return problem
 
 class CreateExamSerializer(serializers.ModelSerializer):
     questions = CreateQuestionSerializer(many=True)
@@ -115,8 +151,7 @@ class CreateExamSerializer(serializers.ModelSerializer):
             <qti-correct-response>\n\t'''
             choices = []
             for choice in q.choices.all():
-                choices.append('''<qti-simple-choice identifier="''' + str(choice.id) + '''">''' + choice.choice_text +
-                               '''</qti-simple-choice>\n\t\t\t''')
+                choices.append(f'<qti-simple-choice identifier="{choice.id}">{choice.choice_text}</qti-simple-choice>\n\t\t\t')
                 if choice.correct_answer:
                     correct_answers += '\t\t\t\t<qti-value>' + choice.choice_text + '</qti-value>\n\t\t\t\t'
 

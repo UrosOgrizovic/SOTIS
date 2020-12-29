@@ -9,7 +9,8 @@ from rest_framework import status
 from django.core.files import File
 
 
-from src.exams.models import Exam, Question, Choice, Domain, Problem, Subject, ProblemAttachment, ExamResult
+from src.exams.models import Exam, Question, Choice, Domain, Problem, Subject, ProblemAttachment, ExamResult, \
+    ActualProblemAttachment
 from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer, CreateExamResultSerializer, \
     DomainSerializer, SubjectSerializer, CreateExamSerializer, ProblemAttachmentSerializer, ProblemSerializer
 from src.users.models import User
@@ -73,9 +74,14 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
         ks = iita(np.array([np.array(questions_array) for questions_array in correct_answers_matrix]), 1)
 
-        print(ks)
+        implications = ks.get('implications', [])
+        for source_id, target_id in implications:
+            question_source = exam.questions.all().order_by('id')[source_id]
+            question_target = exam.questions.all().order_by('id')[target_id]
 
-        return Response()
+            ActualProblemAttachment.objects.get_or_create(source=question_source.problem, target=question_target.problem)
+
+        return HttpResponse('')
 
     @action(detail=True, methods=['post'], url_path='submitExam', url_name='submitExam')
     def submit_exam(self, request, pk):
@@ -194,16 +200,18 @@ class DomainViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin,
 
     @action(detail=True, methods=['get'], url_path='personalized_exams')
     def personalized_exams(self, request, pk):
-        nodes_to_check = list(self.queryset.get(pk=pk).problems.all())
+        nodes_to_check = list(self.queryset.get(pk=pk).problems.filter(source_problems__isnull=True))
         nodes_to_return = []
 
         while len(nodes_to_check):
             current_node = nodes_to_check.pop()
-            if self.request.user.passed_exams.filter(problem=current_node).exists():
+            exam_id = current_node.question.exam.id if current_node.question and current_node.question.exam else None
+            if self.request.user.passed_exams.filter(pk=exam_id).exists():
                 nodes_to_check += Problem.objects.filter(
                     pk__in=current_node.target_problems.all().values_list('target'))
             else:
-                nodes_to_return.append(current_node.exam)
+                if current_node.question and current_node.question.exam and current_node.question.exam not in nodes_to_return:
+                    nodes_to_return.append(current_node.question.exam)
 
         return Response(ExamSerializer(nodes_to_return, many=True).data)
 
@@ -300,7 +308,7 @@ class ProblemViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                      viewsets.GenericViewSet):
     queryset = Problem.objects.all()
     serializers = {
-        'default': ProblemSerializer,
+        'default': ProblemSerializer
     }
     permission_classes = [IsAuthenticated]
 

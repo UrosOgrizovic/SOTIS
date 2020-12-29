@@ -54,5 +54,4 @@ class ProblemAttachment(admin.ModelAdmin):
 
 @admin.register(Problem)
 class ProblemAdmin(admin.ModelAdmin):
-    search_fields = ('title',)
-    list_display = ('title',)
+    pass

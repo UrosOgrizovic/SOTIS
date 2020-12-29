@@ -61,14 +61,22 @@ class Domain(models.Model):
 
 
 class Problem(models.Model):
-    exam = models.OneToOneField(Exam, on_delete=models.SET_NULL, related_name='problem', null=True)
-    title = models.CharField(max_length=255, null=True)
+    question = models.OneToOneField(Question, on_delete=models.SET_NULL, related_name='problem', null=True)
     attached = models.ManyToManyField('self', related_name='attached_problems', blank=True, through='ProblemAttachment')
+    actual_attached = models.ManyToManyField(
+        'self', related_name='actual_attached_problems', blank=True, through='ActualProblemAttachment')
 
     domain = models.ForeignKey(Domain, on_delete=models.CASCADE, related_name='problems', null=True, blank=True)
 
     def __str__(self):
-        return f'{self.title}'
+        if self.question:
+            return f'{self.question.question_text}'
+        return f'Problem-{self.id}'
+
+
+class ActualProblemAttachment(models.Model):
+    source = models.ForeignKey(Problem, on_delete=models.CASCADE, related_name='actual_target_problems', null=True, blank=True)
+    target = models.ForeignKey(Problem, on_delete=models.CASCADE, related_name='actual_source_problems', null=True, blank=True)
 
 
 class ProblemAttachment(models.Model):
