@@ -8,7 +8,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.core.files import File
 
-
 from src.exams.models import Exam, Question, Choice, Domain, Problem, Subject, ProblemAttachment, ExamResult, \
     ActualProblemAttachment
 from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer, CreateExamResultSerializer, \
@@ -17,6 +16,8 @@ from src.users.models import User
 from src.users.serializers import UserSerializer
 
 from learning_spaces.kst.iita import iita
+# from Levenshtein import distance as levenshtein_distance
+import networkx as nx
 
 
 class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
@@ -79,8 +80,51 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
             question_source = exam.questions.all().order_by('id')[source_id]
             question_target = exam.questions.all().order_by('id')[target_id]
 
-            ActualProblemAttachment.objects.get_or_create(source=question_source.problem, target=question_target.problem)
+            ActualProblemAttachment.objects.get_or_create(source=question_source.problem,
+                                                          target=question_target.problem)
 
+        return HttpResponse('')
+
+    @action(detail=True, methods=['get'], url_path='compareKnowledgeSpaces', url_name='compareKnowledgeSpaces')
+    def compare_knowledge_spaces(self, request, pk):
+        exam = Exam.objects.get(id=pk)
+        questions = list(exam.questions.all())
+        question_ids = [q.id for q in questions]
+        expected_problem_attachments = []
+        expected_nodes = set()
+        for q in questions:
+            pas = list(ProblemAttachment.objects.filter(source=q.problem).values())
+            for pa in pas:
+                # maybe a question could be in multiple tests, hence this check
+                if pa["target_id"] in question_ids:
+                    expected_nodes.add(str(pa["source_id"]))
+                    expected_nodes.add(str(pa["target_id"]))
+                    expected_problem_attachments.append((pa["source_id"], pa["target_id"]))
+
+        actual_problem_attachments = []
+        actual_nodes = set()
+        for q in questions:
+            apas = list(ActualProblemAttachment.objects.filter(source=q.problem).values())
+            for apa in apas:
+                # maybe a question could be in multiple tests, hence this check
+                if apa["target_id"] in question_ids:
+                    actual_nodes.add(str(apa["source_id"]))
+                    actual_nodes.add(str(apa["target_id"]))
+                    actual_problem_attachments.append((apa["source_id"], apa["target_id"]))
+
+        expected_ks = nx.Graph()
+        expected_ks.add_nodes_from(list(expected_nodes))
+        expected_ks.add_edges_from(expected_problem_attachments)
+
+        actual_ks = nx.Graph()
+        actual_ks.add_nodes_from(list(actual_nodes))
+        actual_ks.add_edges_from(actual_problem_attachments)
+
+        print(expected_problem_attachments)
+        print(actual_problem_attachments)
+        # leven_dist = levenshtein_distance(str(expected_problem_attachments), str(actual_problem_attachments))
+        # print(f"Distance: {leven_dist}")
+        print(list(nx.algorithms.similarity.optimize_graph_edit_distance(expected_ks, actual_ks)))
         return HttpResponse('')
 
     @action(detail=True, methods=['post'], url_path='submitExam', url_name='submitExam')
@@ -109,7 +153,8 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         """
         get ids of exams that aren't attached to a problem
         """
-        exams = [{"id": exam["id"], "title": exam["title"]} for exam in list(Exam.objects.filter(subject_id=pk).values())]
+        exams = [{"id": exam["id"], "title": exam["title"]} for exam in
+                 list(Exam.objects.filter(subject_id=pk).values())]
         attached_exams_ids = [problem["exam_id"] for problem in list(Problem.objects.filter(domain_id=pk).values())]
         unattached_exams = []
         for exam in exams:

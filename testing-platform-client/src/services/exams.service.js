@@ -139,7 +139,6 @@ function getXML(examId) {
     return fetch(`${config.apiUrl}/exams/${examId}/getXML`, requestOptions)
         .then(handleResponse)
         .then(result => {
-            // var fileURL = window.URL.createObjectURL(new Blob([result]));
             return result;
         });
 }
