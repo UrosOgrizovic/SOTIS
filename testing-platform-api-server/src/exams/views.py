@@ -83,6 +83,11 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
         return HttpResponse('')
 
+    @action(detail=True, methods=['get'], url_path='compareKnowledgeSpaces', url_name='compareKnowledgeSpaces')
+    def compare_knowledge_spaces(self, request, pk):
+        res = self.generate_knowledge_space(request, pk)
+
+
     @action(detail=True, methods=['post'], url_path='submitExam', url_name='submitExam')
     def submit_exam(self, request, pk):
         choices_ids = request.data.get('choices')
