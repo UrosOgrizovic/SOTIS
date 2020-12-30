@@ -109,7 +109,7 @@ function createNode(node) {
         body: JSON.stringify(node)
     };
 
-    return fetch(`${config.apiUrl}/problems/custom_create/`, requestOptions)
+    return fetch(`${config.apiUrl}/problems/`, requestOptions)
         .then(handleResponse)
         .then(result => {
             return result;

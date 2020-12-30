@@ -1,6 +1,5 @@
 <template>
     <div>
-        <button type="submit" @click="generateKnowledgeSpace(examId)">Generate Knowledge Space</button>
         <el-table
             :data="students"
             style="width: 100%">
@@ -20,6 +19,9 @@
                 width="180">
             </el-table-column>
         </el-table>
+        <el-button style="margin-top: 1em" @click="generateKnowledgeSpace(examId)">
+            Generate Knowledge Space
+        </el-button>
     </div>
 </template>
 

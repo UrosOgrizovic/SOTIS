@@ -35,7 +35,7 @@ const actions = {
         })
     },
     addStudentToDomain({ commit }, data) {
-        console.log(commit)
+        console.log(commit);
         domainService.addStudentToDomain(data);
     }
 };

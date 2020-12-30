@@ -40,6 +40,7 @@
             <el-form-item label="Choice Text" prop="choice_text">
                 <el-col :span="12"><el-input v-model="choiceForm.choice_text" type="textarea"></el-input></el-col>
             </el-form-item>
+            <el-checkbox v-model="choiceForm.correct_answer">Correct Answer</el-checkbox>
             <el-form-item>
                 <el-button style="float: right; margin-right: 10px;" type="primary" @click="onAddChoice()">Add</el-button>
             </el-form-item>
@@ -61,7 +62,8 @@ export default {
                 question_text: ''
             },
             choiceForm: {
-                choice_text: ''
+                choice_text: '',
+                correct_answer: false
             },
             examRules: {
                 title: [{type: 'string', required: true, message: 'Please add the exam title', trigger: 'change'}],
