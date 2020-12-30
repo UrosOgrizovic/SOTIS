@@ -16,7 +16,7 @@ from src.users.models import User
 from src.users.serializers import UserSerializer
 
 from learning_spaces.kst.iita import iita
-from Levenshtein import distance as levenshtein_distance
+# from Levenshtein import distance as levenshtein_distance
 import networkx as nx
 
 
@@ -122,7 +122,7 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
         print(expected_problem_attachments)
         print(actual_problem_attachments)
-        leven_dist = levenshtein_distance(str(expected_problem_attachments), str(actual_problem_attachments))
+        # leven_dist = levenshtein_distance(str(expected_problem_attachments), str(actual_problem_attachments))
         # print(f"Distance: {leven_dist}")
         print(list(nx.algorithms.similarity.optimize_graph_edit_distance(expected_ks, actual_ks)))
         return HttpResponse('')
