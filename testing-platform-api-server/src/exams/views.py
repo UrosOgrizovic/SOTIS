@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from django.core.files import File
+from django.conf import settings
 
 from src.exams.models import Exam, Question, Choice, Domain, Problem, Subject, ProblemAttachment, ExamResult, \
     ActualProblemAttachment
@@ -16,6 +17,7 @@ from src.exams.helpers import is_cyclic
 from src.users.models import User
 from src.users.serializers import UserSerializer
 from src.users.permissions import IsTeacherUser, IsStudentUser
+from src.config.celery import generate_iita
 
 from learning_spaces.kst.iita import iita
 # from Levenshtein import distance as levenshtein_distance
@@ -89,6 +91,10 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                 user_questions_array.append(question_value)
 
             correct_answers_matrix.append(user_questions_array)
+
+        if settings.ENABLE_ASYNC:
+            generate_iita.delay(correct_answers_matrix, exam.id)
+            return HttpResponse('')
 
         ks = iita(np.array([np.array(questions_array) for questions_array in correct_answers_matrix]), 1)
 

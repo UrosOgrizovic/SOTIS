@@ -2,4 +2,4 @@
 
 set -e
 
-celery -A src.config worker --loglevel=debug --concurrency=4
+celery -A src.config worker --loglevel=debug --pool=solo
