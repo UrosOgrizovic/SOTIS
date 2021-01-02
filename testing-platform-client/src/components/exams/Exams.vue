@@ -4,38 +4,38 @@
             <el-table
             :data="exams"
             style="width: 100%">
-            <el-table-column
-                prop="title"
-                label="Exam"
-                width="180">
-            </el-table-column>
-            <el-table-column
-                prop="subject.title"
-                label="Subject"
-                width="180">
-            </el-table-column>
-            <el-table-column
-                prop="creator.username"
-                label="Author"
-                width="120">
-            </el-table-column>
-            <el-table-column
-                fixed="right"
-                label="Actions"
-                width="360">
-                <template slot-scope="scope">
-                    <el-button v-if="belongsToGroup('Teacher')" @click="openDeleteExamModal(scope.$index)" type="text" size="small">Remove</el-button>
-                    <el-button v-if="belongsToGroup('Teacher')" @click="openStudentList(scope.$index)" type="text" size="small">See student list</el-button>
-                    <el-button @click="chooseExam(scope.$index)" type="text" size="small">Choose</el-button>
-                    <el-button v-if="belongsToGroup('Teacher')" @click="downloadXML(scope.$index)" type="text" size="small">Download XML</el-button>
-                </template>
-            </el-table-column>
-        </el-table>
+                <el-table-column
+                    prop="title"
+                    label="Exam"
+                    width="180">
+                </el-table-column>
+                <el-table-column
+                    prop="subject.title"
+                    label="Subject"
+                    width="180">
+                </el-table-column>
+                <el-table-column
+                    prop="creator.username"
+                    label="Author"
+                    width="120">
+                </el-table-column>
+                <el-table-column
+                    fixed="right"
+                    label="Actions"
+                    width="360">
+                    <template slot-scope="scope">
+                        <el-button v-if="belongsToGroup('Teacher')" @click="openDeleteExamModal(scope.$index)" type="text" size="small">Remove</el-button>
+                        <el-button v-if="belongsToGroup('Teacher')" @click="openStudentList(scope.$index)" type="text" size="small">See student list</el-button>
+                        <el-button v-if="belongsToGroup('Student')" @click="chooseExam(scope.$index)" type="text" size="small">Choose</el-button>
+                        <el-button v-if="belongsToGroup('Teacher')" @click="downloadXML(scope.$index)" type="text" size="small">Download XML</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
         <confirm-modal title="Are you sure?" ref="confirm"></confirm-modal>
+        <router-link v-if="belongsToGroup('Teacher')" to="new-exam">New Exam</router-link>
 
         </div>
-        <div v-if="belongsToGroup('Teacher') && $route.query.domain_id">
-            <router-link to="new-exam">New Exam</router-link>
+        <div v-if="belongsToGroup('Teacher') && domainId">
             <h4>Add nodes/problems by clicking on the plus sign.</h4>
             <h4>Add edges/problem attachments by clicking on a source node, then clicking on a target node. Cycles are not allowed.</h4>
             <el-button type="primary" @click="showProblemForm">Add new node</el-button>
@@ -98,7 +98,7 @@
 
 <script>
 import { mapState, mapGetters, mapActions } from 'vuex'
-import ConfirmModal from './ConfirmModal';
+import ConfirmModal from '@Components/shared/ConfirmModal';
 import Graph from './Graph';
 
 export default {
@@ -108,6 +108,7 @@ export default {
     },
     data() {
         return {
+            domainId: null,
             problemFormVisibility: false,
             choiceFormVisibility: false,
             problemForm: {
@@ -213,9 +214,9 @@ export default {
     mounted() {
         this.fetchUserObject();
         if (this.$route.query.domain_id) {
-            let domainId = this.$route.query.domain_id;
-            this.fetchPersonalizedExams({id: domainId});
-            this.fetchDomain(domainId);
+            this.domainId = this.$route.query.domain_id;
+            this.fetchPersonalizedExams({id: this.domainId});
+            this.fetchDomain(this.domainId);
         }
         this.fetchAllExams();
     }

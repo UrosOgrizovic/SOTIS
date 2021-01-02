@@ -1,7 +1,7 @@
   
 <template>
     <div class="wrapper">
-        <img width="200px" src="../assets/logo.png">
+        <img width="200px" src="../../assets/logo.png">
         <h1>Hi {{account.user.firstName}}!</h1>
         <div class="container">
             <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus vitae ex quis lacus viverra mattis. Nullam non rutrum dui. Nunc commodo, erat quis condimentum hendrerit, ex arcu faucibus tortor, non dapibus ante ex quis nulla. Donec faucibus nunc ante, a blandit nulla porta nec. Phasellus blandit diam quis laoreet ultrices. Pellentesque et malesuada elit. Duis urna risus, feugiat id dignissim et, auctor eu lacus. Quisque ac tempor elit, quis mattis justo. Phasellus non porta ante. Nulla facilisi. In non feugiat urna, id suscipit lorem.</p>

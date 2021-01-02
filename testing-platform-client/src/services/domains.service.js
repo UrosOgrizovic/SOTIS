@@ -7,7 +7,6 @@ export const domainService = {
     get,
     createLink,
     createNode,
-    getUnattachedExamsForDomainId,
     deleteDomain,
     addStudentToDomain
 };
@@ -58,21 +57,6 @@ function deleteDomain(data) {
         .then(() => {})
 }
 
-function getUnattachedExamsForDomainId(id) {
-    const headers = authHeader();
-    headers['Content-Type'] = 'application/json';
-    
-    const requestOptions = {
-        method: 'GET',
-        headers: headers
-    };
-    
-    return fetch(`${config.apiUrl}/exams/${id}/getUnattachedExamsForDomainId`, requestOptions)
-        .then(handleResponse)
-        .then(exams => {
-            return exams;
-        });
-}
 
 function createLink(link) {
     const token = JSON.parse(localStorage.getItem('user')).token;

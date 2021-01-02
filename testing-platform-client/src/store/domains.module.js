@@ -23,11 +23,6 @@ const actions = {
             commit('setNode', result);
         })
     },
-    getUnattachedExamsForDomainId({ commit }, domainId) {
-        domainService.getUnattachedExamsForDomainId(domainId).then(unattachedExams => {
-            commit('setUnattachedExams', unattachedExams);
-        })
-    },
     deleteDomain({ commit }, data) {
         const id = data.id
         domainService.deleteDomain(data).then(() => {

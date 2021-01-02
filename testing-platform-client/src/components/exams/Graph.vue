@@ -68,7 +68,6 @@ export default {
 
             this.nodes.forEach(node => {
                 nodes.push({id: node.id, name: `${node.id}-node`})
-                console.log(this.nextNodesField)
                 node[this.nextNodesField].forEach(nextAttachment => {links.push({sid: node.id, tid: nextAttachment.target})})
             });
             return {

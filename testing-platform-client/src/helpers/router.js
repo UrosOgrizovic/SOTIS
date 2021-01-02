@@ -1,15 +1,17 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 
-import Home from '../components/Home'
-import Login from '../components/Login'
-import Register from '../components/Register'
-import Domains from '../components/Domains'
-import Exams from '../components/Exams'
-import Exam from '../components/Exam'
-import ExamForm from '../components/ExamForm'
-import SubjectForm from '../components/SubjectForm'
-import ExamTakersList from '../components/ExamTakersList'
+import Home from '@Components/home/Home'
+import Login from '@Components/home/Login'
+import Register from '@Components/home/Register'
+import Domains from '@Components/domains/Domains'
+import Exams from '@Components/exams/Exams'
+import Exam from '@Components/exams/Exam'
+import ExamForm from '@Components/exams/ExamForm'
+import SubjectForm from '@Components/subjects/SubjectForm'
+import ExamTakersList from '@Components/exams/ExamTakersList'
+
+import { teacherOnlyGuard } from '@Helpers/guards';
 
 Vue.use(Router);
 
@@ -23,7 +25,7 @@ export const router = new Router({
     { path: '/exams/:exam_id/students', name: 'exam_takers_list', component: ExamTakersList},
     { path: '/exams', component: Exams},
     { path: '/domains', component: Domains},
-    { path: '/new-exam', component: ExamForm},
+    { path: '/new-exam', component: ExamForm, beforeRouteEnter: teacherOnlyGuard},
     { path: '/new-subject', component: SubjectForm },
 
     // otherwise redirect to home

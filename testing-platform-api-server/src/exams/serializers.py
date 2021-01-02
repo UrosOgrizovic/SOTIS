@@ -134,7 +134,7 @@ class CreateExamSerializer(serializers.ModelSerializer):
         return exam
 
     def generate_ims_qti(self, exam):
-        file = File(open('../static/' + str(exam.id) + '.xml', 'a'))
+        file = File(open(f'./static/{exam.id}.xml', 'a'))
 
         data = '<?xml version="1.0" encoding="UTF-8"?>\n<qti-assessment-items>'
         for q in exam.questions.all():

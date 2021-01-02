@@ -12,8 +12,10 @@ from src.exams.models import Exam, Question, Choice, Domain, Problem, Subject, P
     ActualProblemAttachment
 from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer, CreateExamResultSerializer, \
     DomainSerializer, SubjectSerializer, CreateExamSerializer, ProblemAttachmentSerializer, ProblemSerializer
+from src.exams.helpers import is_cyclic
 from src.users.models import User
 from src.users.serializers import UserSerializer
+from src.users.permissions import IsTeacherUser, IsStudentUser
 
 from learning_spaces.kst.iita import iita
 # from Levenshtein import distance as levenshtein_distance
@@ -32,6 +34,14 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         'create': CreateExamSerializer
     }
 
+    def get_permissions(self):
+        if self.action in ['create', 'destroy']:
+            self.permission_classes = [IsTeacherUser]
+        else:
+            self.permission_classes = [IsAuthenticated]
+
+        return super(ExamViewSet, self).get_permissions()
+
     def get_serializer_class(self):
         if self.action in ['submit_exam']:
             return CreateExamResultSerializer
@@ -45,15 +55,22 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         else:
             return self.queryset.none()
 
-    permission_classes = [IsAuthenticated]
-
     @action(detail=True, methods=['get'], url_path='examTakers', url_name='examTakers')
     def exam_takers(self, request, pk):
+        '''
+            Returns users that partook a specific exam.
+        '''
         user_ids = ExamResult.objects.filter(exam=self.get_object()).values_list('user', flat=True)
         return Response(UserSerializer(User.objects.filter(pk__in=user_ids), many=True).data)
 
     @action(detail=True, methods=['get'], url_path='generateKnowledgeSpace', url_name='generateKnowledgeSpace')
     def generate_knowledge_space(self, request, pk):
+        '''
+            Generates knowledge space for a particular exam.
+            It creates a matrix of correct and uncorrect answers which is passed as input to IITA algorithm.
+            Results are gathered asynchronously and saved in database.
+        '''
+
         exam = self.get_object()
         user_ids = ExamResult.objects.filter(exam=self.get_object()).values_list('user', flat=True)
 
@@ -87,6 +104,9 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
     @action(detail=True, methods=['get'], url_path='compareKnowledgeSpaces', url_name='compareKnowledgeSpaces')
     def compare_knowledge_spaces(self, request, pk):
+        '''
+            Compares expected and actual knowledge spaces using networkx library.
+        '''
         exam = Exam.objects.get(id=pk)
         questions = list(exam.questions.all())
         question_ids = [q.id for q in questions]
@@ -127,8 +147,11 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         print(list(nx.algorithms.similarity.optimize_graph_edit_distance(expected_ks, actual_ks)))
         return HttpResponse('')
 
-    @action(detail=True, methods=['post'], url_path='submitExam', url_name='submitExam')
+    @action(detail=True, methods=['post'], url_path='submitExam', url_name='submitExam', permission_classes=[IsStudentUser])
     def submit_exam(self, request, pk):
+        '''
+            Submits exam answers that student had.
+        '''
         choices_ids = request.data.get('choices')
         score = Choice.objects.filter(id__in=choices_ids, correct_answer=True, question__exam=pk).count()
 
@@ -148,25 +171,12 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['get'], url_path='getUnattachedExamsForDomainId')
-    def get_unattached_exams_for_domain_id(self, request, pk):
-        """
-        get ids of exams that aren't attached to a problem
-        """
-        exams = [{"id": exam["id"], "title": exam["title"]} for exam in
-                 list(Exam.objects.filter(subject_id=pk).values())]
-        attached_exams_ids = [problem["exam_id"] for problem in list(Problem.objects.filter(domain_id=pk).values())]
-        unattached_exams = []
-        for exam in exams:
-            id = exam["id"]
-            if id not in attached_exams_ids:
-                unattached_exams.append(exam)
-
-        return Response(unattached_exams)
-
     @action(detail=True, methods=['get'], url_path='getXML')
     def getXML(self, request, pk):
-        file = File(open('../static/' + str(pk) + '.xml', 'r'))
+        '''
+            Fetches XML file generated using IMS QTA specs.
+        '''
+        file = File(open('./static/' + str(pk) + '.xml', 'r'))
         data = file.read()
         return Response(data)
 
@@ -232,6 +242,14 @@ class DomainViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin,
         'default': DomainSerializer,
     }
 
+    def get_permissions(self):
+        if self.action == 'destroy':
+            self.permission_classes = [IsTeacherUser]
+        else:
+            self.permission_classes = [IsAuthenticated]
+
+        return super(DomainViewSet, self).get_permissions()
+
     def get_serializer_class(self):
         return self.serializers.get(self.action, self.serializers['default'])
 
@@ -245,6 +263,9 @@ class DomainViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin,
 
     @action(detail=True, methods=['get'], url_path='personalized_exams')
     def personalized_exams(self, request, pk):
+        '''
+            Returns personalized exams that can be taken next.
+        '''
         nodes_to_check = list(self.queryset.get(pk=pk).problems.filter(source_problems__isnull=True))
         nodes_to_return = []
 
@@ -260,6 +281,14 @@ class DomainViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin,
 
         return Response(ExamSerializer(nodes_to_return, many=True).data)
 
+    @action(detail=True, methods=['patch'], url_path='add-student')
+    def add_student(self, request, pk):
+        '''
+            Adds a student to domain (and subject).
+        '''
+        self.get_object().subject.students.add(User.objects.get(pk=request.data.get('id')))
+        return HttpResponse('')
+
 
 class ProblemAttachmentViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                                mixins.CreateModelMixin, mixins.ListModelMixin,
@@ -273,47 +302,6 @@ class ProblemAttachmentViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixi
         return self.serializers.get(self.action, self.serializers['default'])
 
     permission_classes = [IsAuthenticated]
-
-    def is_cyclic_util(self, node, visited, recursion_stack, nodes, index):
-        # Mark current node as visited and
-        # adds to recursion stack
-        visited[index] = True
-        recursion_stack[index] = True
-
-        # Recur for all neighbors
-        # if any neighbor is visited and in
-        # recStack then graph is cyclic
-
-        for neighbor in node["neighbors"]:
-            idx = 0
-            neighbor_node = {}
-            # neighbor has to be full node, not just index
-            for i in range(len(nodes)):
-                if nodes[i]['id'] == neighbor:
-                    idx = i
-                    neighbor_node = nodes[i]
-                    break
-            if not visited[idx]:
-
-                if self.is_cyclic_util(neighbor_node, visited, recursion_stack, nodes, idx):
-                    return True
-            elif recursion_stack[idx]:
-                return True
-
-        # The node needs to be popped from
-        # recursion stack before function ends
-        recursion_stack[index] = False
-        return False
-
-    def is_cyclic(self, nodes):
-        visited = [False] * len(nodes)
-        recursion_stack = [False] * len(nodes)
-
-        for i in range(len(nodes)):
-            if not visited[i]:
-                if self.is_cyclic_util(nodes[i], visited, recursion_stack, nodes, i):
-                    return True
-        return False
 
     @action(detail=False, methods=['post'], url_path='custom_create', url_name='custom_create')
     def custom_make(self, request):
@@ -337,7 +325,7 @@ class ProblemAttachmentViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixi
             if node['id'] == new_problem_attachment['source']:
                 node['neighbors'].append(new_problem_attachment['target'])
 
-        if not self.is_cyclic(nodes):
+        if not is_cyclic(nodes):
             serializer = self.get_serializer(data={
                 'source': new_problem_attachment["source"],
                 'target': new_problem_attachment["target"]
@@ -359,18 +347,3 @@ class ProblemViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
     def get_serializer_class(self):
         return self.serializers.get(self.action, self.serializers['default'])
-
-    @action(detail=False, methods=['post'], url_path='custom_create', url_name='custom_create')
-    def custom_make(self, request):
-        new_problem_id = Problem.objects.all().count() + 1
-        new_problem = {"id": new_problem_id, "title": request.data["title"], "exam": request.data["examId"],
-                       "domain": request.data["domainId"], "attached": []}
-        serializer = self.get_serializer(data=new_problem)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(request.data)
-
-    @action(detail=True, methods=['patch'], url_path='add-student')
-    def add_student(self, request, pk):
-        self.get_object().subject.students.add(User.objects.get(pk=request.data.get('id')))
-        return HttpResponse('')

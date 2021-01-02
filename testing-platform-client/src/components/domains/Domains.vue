@@ -51,7 +51,7 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 
-import ConfirmModal from './ConfirmModal';
+import ConfirmModal from '@Components/shared/ConfirmModal';
 
 export default {
     components: {

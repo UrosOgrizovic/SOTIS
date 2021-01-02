@@ -1,7 +1,7 @@
 <template>
     <el-row style="margin-bottom: 10%">
         <el-col :span="24" class="navbar__menu-box">
-            <img style="width: 50px" src="../assets/logo.png" alt="" class="navbar__logo">
+            <img style="width: 50px" src="../../assets/logo.png" alt="" class="navbar__logo">
             <p class="navbar__title"><a href="/">Testing Platform</a></p>
             <ul class="el-menu el-menu--horizontal navbar__menu">
                 <li class="el-menu-item"><router-link to="/">Home</router-link></li>
