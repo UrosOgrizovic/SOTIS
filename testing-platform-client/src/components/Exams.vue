@@ -38,10 +38,11 @@
             <router-link to="new-exam">New Exam</router-link>
             <h4>Add nodes/problems by clicking on the plus sign.</h4>
             <h4>Add edges/problem attachments by clicking on a source node, then clicking on a target node. Cycles are not allowed.</h4>
+            <el-button type="primary" @click="showProblemForm">Add new node</el-button>
             <el-form v-show="problemFormVisibility" :model="problemForm" label-width="120px" style="width: 50%">
                 <h2>New Problem</h2>
                 <el-form-item label="Question text" prop="question_text">
-                    <el-col :span="12"><el-input v-model="problemForm.question_text"></el-input></el-col>
+                    <el-col :span="12"><el-input v-model="problemForm.question_text" type="textarea"></el-input></el-col>
                 </el-form-item>
                 <el-form-item label="Exam">
                     <el-select v-model="problemForm.exam" placeholder="Select Exam">
@@ -70,24 +71,25 @@
             </el-form>
 
 
-            <div style="display: flex; flex-direction: column;">
-                <h3>Expected Knowledge Space</h3>
-                <graph 
-                   @plus-clicked="showProblemForm"
-                   @add-link="connectProblems"
-                   :is-edit-mode="true"
-                   :nodes="currentDomain.problems || []" 
-                   :is-new-link="isDomainNewLink"
-                   :name="'expected-ks'"
-                   :next-nodes-field="'target_problems'"/>
-                <h3>Actual Knowledge Space</h3>
-                <graph 
-                   @plus-clicked="showProblemForm"
-                   :is-edit-mode="false"
-                   :nodes="currentDomain.problems || []" 
-                   :name="'actual-ks'"
-                   :is-new-link="isDomainNewLink"
-                   :next-nodes-field="'actual_target_problems'"/>
+            <div style="display: flex; flex-direction: row;">
+                <div>
+                    <h3>Expected Knowledge Space</h3>
+                    <graph @add-link="connectProblems"
+                           :is-edit-mode="true"
+                           :nodes="currentDomain.problems || []" 
+                           :is-new-link="isDomainNewLink"
+                           :name="'expected-ks'"
+                           :next-nodes-field="'target_problems'"/>
+                </div>
+                <div>
+                    <h3>Actual Knowledge Space</h3>
+                    <graph :is-edit-mode="false"
+                           :nodes="currentDomain.problems || []" 
+                           :name="'actual-ks'"
+                           :is-new-link="isDomainNewLink"
+                           :next-nodes-field="'actual_target_problems'"/>
+                </div>
+                
             </div>
             
         </div>
@@ -196,7 +198,8 @@ export default {
             this.problemFormVisibility = true;
         },
         connectProblems(newLink) {
-            this.createLink({domainId: this.currentDomain.id, source: newLink.source.id, target: newLink.target.id});
+            this.createLink({domainId: this.currentDomain.id, source: newLink.source, target: newLink.target});
+            this.fetchDomain(this.currentDomain.id);
         },
         onAddChoice() {
             this.problemForm.choices.push(this.choiceForm)

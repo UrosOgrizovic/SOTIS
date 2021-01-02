@@ -15,6 +15,7 @@
     "sass-loader": "^10.1.0",
     "vee-validate": "^2.2.8",
     "vue": "^2.6.11",
+    "vue-d3-network": "^0.1.28",
     "vue-router": "^3.4.9",
     "vue-simple-alert": "^1.1.1",
     "vuex": "^3.5.1"
