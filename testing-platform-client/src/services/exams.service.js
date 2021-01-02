@@ -10,7 +10,8 @@ export const examService = {
     deleteExam,
     getExamTakers,
     generateKnowledgeSpace,
-    getXML
+    getXML,
+    getPersonalizedQuestions
 };
 
 function getAll() {
@@ -105,6 +106,21 @@ function getExamTakers(examId) {
     };
 
     return fetch(`${config.apiUrl}/exams/${examId}/examTakers`, requestOptions)
+        .then(handleResponse)
+        .then(students => {
+            return students;
+        });
+}
+
+function getPersonalizedQuestions(examId) {
+    const headers = authHeader();
+    headers['Content-Type'] = 'application/json';
+    const requestOptions = {
+        method: 'GET',
+        headers: headers
+    };
+
+    return fetch(`${config.apiUrl}/exams/${examId}/personalizedQuestionsOrder`, requestOptions)
         .then(handleResponse)
         .then(students => {
             return students;

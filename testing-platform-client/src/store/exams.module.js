@@ -10,7 +10,8 @@ const state = {
         score: 0
     },
     examTakers: [],
-    xml: {}
+    xml: {},
+    personalizedQuestions: []
 };
 
 const actions = {
@@ -62,6 +63,11 @@ const actions = {
         examService.getXML(examId).then(result => {
             commit('setXML', result);
         })
+    },
+    fetchPersonalizedQuestions({commit}, examId) {
+        examService.getPersonalizedQuestions(examId).then(result => {
+            commit('setPersonalizedQuestions', result);
+        })
     }
 };
 
@@ -90,6 +96,9 @@ const mutations = {
     },
     setXML(state, xml) {
         state.xml = xml;
+    },
+    setPersonalizedQuestions(state, questions) {
+        state.personalizedQuestions = [...questions];
     }
 };
 
@@ -119,6 +128,9 @@ const getters = {
     },
     getXML(state) {
         return state.xml;
+    },
+    getPersonalizedQuestions(state) {
+        return state.personalizedQuestions;
     }
 };
 

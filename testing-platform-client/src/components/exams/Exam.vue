@@ -3,7 +3,7 @@
         <el-form :model="form" label-width="120px" :rules="rules" ref="form">
             <h3 style="float: left;">Test title: {{exam.title}}</h3><br><br>
             <ol style="margin-left: 0; margin-right: 0;">
-                <div v-for="question in exam.questions" :key="question.id">
+                <div v-for="question in personalizedQuestions" :key="question.id">
                     <li v-html="question.question_text"></li>
                     <el-form-item>
                         <el-checkbox v-for="choice in question.choices" :key="choice.id" :label="choice.choice_text" id="choice.id" @change="handleChange(choice.id)"></el-checkbox>
@@ -38,14 +38,15 @@ export default {
     },
     computed: {
         ...mapGetters({
-            examResult: 'exams/getExamResult'
+            examResult: 'exams/getExamResult',
+            personalizedQuestions: 'exams/getPersonalizedQuestions'
         }),
         exam() {
             return this.$store.getters['exams/getExam'](this.exam_id)
         }
     },
     methods: {
-        ...mapActions('exams', ['submitExam']),
+        ...mapActions('exams', ['submitExam', 'fetchPersonalizedQuestions']),
         onSubmit(examId) {
             this.submitExam({"id": examId, "choices": this.form.choices});
             this.show = true;          
@@ -61,6 +62,7 @@ export default {
     },
     created() {
         this.exam_id = this.$route.params.exam_id
+        this.fetchPersonalizedQuestions(this.exam_id)
     }
 }
 </script>

@@ -13,7 +13,7 @@ from src.exams.models import Exam, Question, Choice, Domain, Problem, Subject, P
     ActualProblemAttachment
 from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer, CreateExamResultSerializer, \
     DomainSerializer, SubjectSerializer, CreateExamSerializer, ProblemAttachmentSerializer, ProblemSerializer
-from src.exams.helpers import is_cyclic
+from src.exams.helpers import is_cyclic, order_questions
 from src.users.models import User
 from src.users.serializers import UserSerializer
 from src.users.permissions import IsTeacherUser, IsStudentUser
@@ -159,7 +159,9 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
             Submits exam answers that student had.
         '''
         choices_ids = request.data.get('choices')
-        score = Choice.objects.filter(id__in=choices_ids, correct_answer=True, question__exam=pk).count()
+        wrong_question_ids = Choice.objects.filter(question__in=choices_ids, correct_answer=False).values_list('question', flat=True)
+        correct_questions = Question.objects.filter(exam=pk).exclude(id__in=wrong_question_ids)
+        score = Choice.objects.filter(question__in=correct_questions, correct_answer=True).count()
 
         serializer = self.get_serializer(data={
             'exam': self.get_object().id,
@@ -182,10 +184,16 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         '''
             Fetches XML file generated using IMS QTA specs.
         '''
-        file = File(open('./static/' + str(pk) + '.xml', 'r'))
+        file = File(open(f'./static/{pk}.xml', 'r'))
         data = file.read()
         return Response(data)
 
+    @action(detail=True, methods=['get'], url_path='personalizedQuestionsOrder')
+    def get_personalized_questions_order(self, request, pk):
+        questions = self.get_object().questions.all()
+
+        questions = sorted(questions, key=order_questions)
+        return Response(QuestionSerializer(questions, many=True).data)
 
 class SubjectViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin,
                      mixins.ListModelMixin, mixins.CreateModelMixin):
