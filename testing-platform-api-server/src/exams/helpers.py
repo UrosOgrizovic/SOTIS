@@ -1,5 +1,3 @@
-from src.exams.models import Exam
-
 def find_problem_level(problem, level):
     if not problem.source_problems.first():
         return level
@@ -9,7 +7,7 @@ def find_problem_level(problem, level):
 
 def order_questions(question):
     return find_problem_level(question.problem, 0)
-    
+
 
 def is_cyclic_check(node, visited, recursion_stack, nodes, index):
     # Mark current node as visited and

@@ -159,7 +159,9 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
             Submits exam answers that student had.
         '''
         choices_ids = request.data.get('choices')
-        wrong_question_ids = Choice.objects.filter(question__in=choices_ids, correct_answer=False).values_list('question', flat=True)
+        wrong_question_ids = Choice.objects.filter(
+            question__in=choices_ids, correct_answer=False).values_list('question', flat=True)
+
         correct_questions = Question.objects.filter(exam=pk).exclude(id__in=wrong_question_ids)
         score = Choice.objects.filter(question__in=correct_questions, correct_answer=True).count()
 
