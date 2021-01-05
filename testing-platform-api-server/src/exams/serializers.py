@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.core.files import File
 
 from src.exams.models import Choice, Question, Exam, ExamResult, Domain, Subject, Problem,\
-    ProblemAttachment, ActualProblemAttachment
+    ProblemAttachment, ActualProblemAttachment, DiffProblemAttachment
 from src.users.serializers import UserSerializer
 
 
@@ -85,6 +85,12 @@ class ActualProblemAttachmentSerializer(serializers.ModelSerializer):
         model = ActualProblemAttachment
         exclude = ()
 
+
+class DiffProblemAttachmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DiffProblemAttachment
+        exclude = ()
+
 class ProblemSerializer(serializers.ModelSerializer):
     """ read_only=True because create() doesn't support writable nested fields by default
     (used in ProblemViewSet -> custom_make)"""
@@ -93,6 +99,9 @@ class ProblemSerializer(serializers.ModelSerializer):
 
     actual_source_problems = ActualProblemAttachmentSerializer(many=True, read_only=True)
     actual_target_problems = ActualProblemAttachmentSerializer(many=True, read_only=True)
+
+    diff_source_problems = DiffProblemAttachmentSerializer(many=True, read_only=True)
+    diff_target_problems = DiffProblemAttachmentSerializer(many=True, read_only=True)
 
     question_text = serializers.CharField(write_only=True)
     choices = serializers.ListField(write_only=True)

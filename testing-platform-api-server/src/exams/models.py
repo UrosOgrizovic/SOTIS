@@ -65,6 +65,8 @@ class Problem(models.Model):
     attached = models.ManyToManyField('self', related_name='attached_problems', blank=True, through='ProblemAttachment')
     actual_attached = models.ManyToManyField(
         'self', related_name='actual_attached_problems', blank=True, through='ActualProblemAttachment')
+    diff_attached = models.ManyToManyField(
+        'self', related_name='diff_attached_problems', blank=True, through='DiffProblemAttachment')
 
     domain = models.ForeignKey(Domain, on_delete=models.CASCADE, related_name='problems', null=True, blank=True)
 
@@ -82,6 +84,11 @@ class ActualProblemAttachment(models.Model):
 class ProblemAttachment(models.Model):
     source = models.ForeignKey(Problem, on_delete=models.CASCADE, related_name='target_problems', null=True, blank=True)
     target = models.ForeignKey(Problem, on_delete=models.CASCADE, related_name='source_problems', null=True, blank=True)
+
+
+class DiffProblemAttachment(models.Model):
+    source = models.ForeignKey(Problem, on_delete=models.CASCADE, related_name='diff_target_problems', null=True, blank=True)
+    target = models.ForeignKey(Problem, on_delete=models.CASCADE, related_name='diff_source_problems', null=True, blank=True)
 
 
 @receiver(models.signals.post_save, sender=Subject)

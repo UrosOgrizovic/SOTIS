@@ -10,7 +10,7 @@ from django.core.files import File
 from django.conf import settings
 
 from src.exams.models import Exam, Question, Choice, Domain, Problem, Subject, ProblemAttachment, ExamResult, \
-    ActualProblemAttachment
+    ActualProblemAttachment, DiffProblemAttachment
 from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer, CreateExamResultSerializer, \
     DomainSerializer, SubjectSerializer, CreateExamSerializer, ProblemAttachmentSerializer, ProblemSerializer
 from src.exams.helpers import is_cyclic, order_questions
@@ -146,12 +146,21 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         actual_ks.add_nodes_from(list(actual_nodes))
         actual_ks.add_edges_from(actual_problem_attachments)
 
-        print(expected_problem_attachments)
-        print(actual_problem_attachments)
+        print(f"Expected problem attachments: {expected_problem_attachments}")
+        print(f"Actual problem attachments: {actual_problem_attachments}")
         # leven_dist = levenshtein_distance(str(expected_problem_attachments), str(actual_problem_attachments))
         # print(f"Distance: {leven_dist}")
-        print(list(nx.algorithms.similarity.optimize_graph_edit_distance(expected_ks, actual_ks)))
-        return HttpResponse('')
+        ged = nx.algorithms.similarity.graph_edit_distance(expected_ks, actual_ks)
+        print(f"Graph edit distance = {ged}")
+        diff_edges = set(expected_problem_attachments).symmetric_difference(set(actual_problem_attachments))
+
+        for edge in diff_edges:
+            source_problem = Problem.objects.get(pk=edge[0])
+            target_problem = Problem.objects.get(pk=edge[1])
+            DiffProblemAttachment.objects.get_or_create(source=source_problem,
+                                                          target=target_problem)
+        
+        return Response({"ged": ged}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'], url_path='submitExam', url_name='submitExam', permission_classes=[IsStudentUser])
     def submit_exam(self, request, pk):
