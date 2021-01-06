@@ -89,6 +89,15 @@
                            :is-new-link="isDomainNewLink"
                            :next-nodes-field="'actual_target_problems'"/>
                 </div>
+                <div>
+                    <h3>Compare Knowledge Spaces</h3>
+                    <h3>Graph edit distance = {{domainGED}}</h3>
+                    <graph :is-edit-mode="false"
+                           :nodes="currentDomain.problems || []" 
+                           :name="'diff-ks'"
+                           :is-new-link="isDomainNewLink"
+                           :next-nodes-field="'diff_target_problems'"/>
+                </div>
                 
             </div>
             
@@ -135,15 +144,17 @@ export default {
         }),
         ...mapGetters({exams: 'exams/getAllExams'}),
         ...mapGetters({xml: 'exams/getXML'}),
+        ...mapGetters({examGED: 'exams/getExamGED'}),
         ...mapGetters({isDomainNewLink: 'domains/getIsNewLink'}),
         ...mapGetters({domainNewNode: 'domains/getNewNode'}),
         ...mapGetters({unattachedExams: 'domains/getUnattachedExams'}),
         ...mapGetters({currentDomain: 'domains/getCurrentDomain'}),
+        ...mapGetters({domainGED: 'domains/getDomainGED'}),
     },
     methods: {
-        ...mapActions('exams', ['fetchPersonalizedExams', 'fetchAllExams', 'deleteExam', 'fetchXML']),
+        ...mapActions('exams', ['fetchPersonalizedExams', 'fetchAllExams', 'deleteExam', 'fetchXML', 'compareKnowledgeSpaces']),
         ...mapActions('account', ['fetchUserObject']),
-        ...mapActions('domains', ['fetchDomain', 'createLink', 'createNode']),
+        ...mapActions('domains', ['fetchDomain', 'createLink', 'createNode', 'fetchDomainGED']),
         chooseExam(index) {
             if (!this.exams.length) {
                 console.log("Exams list is empty!")
@@ -217,6 +228,7 @@ export default {
             this.domainId = this.$route.query.domain_id;
             this.fetchPersonalizedExams({id: this.domainId});
             this.fetchDomain(this.domainId);
+            this.fetchDomainGED(this.domainId);
         }
         this.fetchAllExams();
     }

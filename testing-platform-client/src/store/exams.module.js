@@ -11,7 +11,8 @@ const state = {
     },
     examTakers: [],
     xml: {},
-    personalizedQuestions: []
+    personalizedQuestions: [],
+    examGED: 0
 };
 
 const actions = {
@@ -68,6 +69,11 @@ const actions = {
         examService.getPersonalizedQuestions(examId).then(result => {
             commit('setPersonalizedQuestions', result);
         })
+    },
+    fetchExamGED({commit}, examId) {
+        examService.getExamGED(examId).then(result => {
+            commit('setGED', result);
+        })
     }
 };
 
@@ -99,6 +105,9 @@ const mutations = {
     },
     setPersonalizedQuestions(state, questions) {
         state.personalizedQuestions = [...questions];
+    },
+    setGED(state, GED) {
+        state.examGED = GED;
     }
 };
 
@@ -131,6 +140,9 @@ const getters = {
     },
     getPersonalizedQuestions(state) {
         return state.personalizedQuestions;
+    },
+    getExamGED(state) {
+        return state.examGED;
     }
 };
 

@@ -1,7 +1,7 @@
 from rest_framework.routers import SimpleRouter
 
 from src.exams.views import ExamViewSet, QuestionViewSet, ChoiceViewSet, DomainViewSet, SubjectViewSet, \
-    ProblemAttachmentViewSet, ProblemViewSet
+    ProblemAttachmentViewSet, ProblemViewSet, GraphEditDistanceViewSet
 
 examsRouter = SimpleRouter()
 examsRouter.register(r'exams', ExamViewSet)
@@ -23,3 +23,6 @@ problemAttachmentRouter.register(r'problem_attachments', ProblemAttachmentViewSe
 
 problemsRouter = SimpleRouter()
 problemsRouter.register(r'problems', ProblemViewSet)
+
+gedRouter = SimpleRouter()
+gedRouter.register(r'ged', GraphEditDistanceViewSet)

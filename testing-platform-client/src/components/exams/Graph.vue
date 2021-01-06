@@ -32,7 +32,7 @@ export default {
     data() {
         return {
             options: {
-                size:{ w:800, h:600},
+                size:{ w:400, h:300},
                 nodeSize: 15,
                 nodeLabels: true,
                 canvas: false,
@@ -65,7 +65,7 @@ export default {
         format() {
             let nodes = [];
             let links = [];
-
+            
             this.nodes.forEach(node => {
                 nodes.push({id: node.id, name: `${node.id}-node`})
                 node[this.nextNodesField].forEach(nextAttachment => {links.push({sid: node.id, tid: nextAttachment.target})})
@@ -101,7 +101,7 @@ export default {
 
 <style scoped>
 .container {
-    width: 800px;
+    width: 400px;
 }
 #m-end path, #m-start{
   fill: rgba(18, 120, 98, 0.8);

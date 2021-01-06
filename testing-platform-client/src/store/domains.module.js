@@ -1,6 +1,6 @@
 import { domainService } from '../services';
 
-const state = {domains: [], currentDomain: {}, isNewLink: false, newNode: {}, unattachedExams: []};
+const state = {domains: [], currentDomain: {}, isNewLink: false, newNode: {}, unattachedExams: [], domainGED: 0};
 
 const actions = {
     fetchAllDomains({ commit }) {
@@ -32,6 +32,11 @@ const actions = {
     addStudentToDomain({ commit }, data) {
         console.log(commit);
         domainService.addStudentToDomain(data);
+    },
+    fetchDomainGED({ commit }, domainId) {
+        domainService.getDomainGED(domainId).then(result => {
+            commit('setGED', result);
+        })
     }
 };
 
@@ -54,6 +59,9 @@ const mutations = {
     deleteDomain(state, id) {
         const index = state.domains.findIndex(domain => domain.id == id);
         state.domains.splice(index, 1);
+    },
+    setGED(state, ged) {
+        state.domainGED = ged;
     }
 };
 
@@ -72,6 +80,9 @@ const getters = {
     },
     getUnattachedExams(state) {
         return state.unattachedExams;
+    },
+    getDomainGED(state) { 
+        return state.domainGED;
     }
 };
 

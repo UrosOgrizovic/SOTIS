@@ -10,9 +10,10 @@ from django.core.files import File
 from django.conf import settings
 
 from src.exams.models import Exam, Question, Choice, Domain, Problem, Subject, ProblemAttachment, ExamResult, \
-    ActualProblemAttachment
+    ActualProblemAttachment, DiffProblemAttachment, GraphEditDistance
 from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer, CreateExamResultSerializer, \
-    DomainSerializer, SubjectSerializer, CreateExamSerializer, ProblemAttachmentSerializer, ProblemSerializer
+    DomainSerializer, SubjectSerializer, CreateExamSerializer, ProblemAttachmentSerializer, ProblemSerializer, \
+    GraphEditDistanceSerializer
 from src.exams.helpers import is_cyclic, order_questions
 from src.users.models import User
 from src.users.serializers import UserSerializer
@@ -105,7 +106,7 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
             ActualProblemAttachment.objects.get_or_create(source=question_source.problem,
                                                           target=question_target.problem)
-
+        self.compare_knowledge_spaces(request, pk)
         return HttpResponse('')
 
     @action(detail=True, methods=['get'], url_path='compareKnowledgeSpaces', url_name='compareKnowledgeSpaces')
@@ -146,12 +147,21 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         actual_ks.add_nodes_from(list(actual_nodes))
         actual_ks.add_edges_from(actual_problem_attachments)
 
-        print(expected_problem_attachments)
-        print(actual_problem_attachments)
+        print(f"Expected problem attachments: {expected_problem_attachments}")
+        print(f"Actual problem attachments: {actual_problem_attachments}")
         # leven_dist = levenshtein_distance(str(expected_problem_attachments), str(actual_problem_attachments))
         # print(f"Distance: {leven_dist}")
-        print(list(nx.algorithms.similarity.optimize_graph_edit_distance(expected_ks, actual_ks)))
-        return HttpResponse('')
+        ged = nx.algorithms.similarity.graph_edit_distance(expected_ks, actual_ks)
+        print(f"Graph edit distance = {ged}")
+        diff_edges = set(expected_problem_attachments).symmetric_difference(set(actual_problem_attachments))
+
+        for edge in diff_edges:
+            source_problem = Problem.objects.get(pk=edge[0])
+            target_problem = Problem.objects.get(pk=edge[1])
+            DiffProblemAttachment.objects.get_or_create(source=source_problem,
+                                                        target=target_problem)
+        GraphEditDistance.objects.update_or_create(exam=exam, ged=ged)
+        return Response({"ged": ged}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'], url_path='submitExam', url_name='submitExam', permission_classes=[IsStudentUser])
     def submit_exam(self, request, pk):
@@ -363,3 +373,29 @@ class ProblemViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
     def get_serializer_class(self):
         return self.serializers.get(self.action, self.serializers['default'])
+
+
+class GraphEditDistanceViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    queryset = GraphEditDistance.objects.all()
+    serializers = {
+        'default': GraphEditDistanceSerializer
+    }
+
+    def get_serializer_class(self):
+        return self.serializers.get(self.action, self.serializers['default'])
+
+    @action(detail=True, methods=['get'], url_path='getByExamId')
+    def getByExamId(self, request, pk):
+        exam = Exam.objects.get(pk=pk)
+        return Response(exam.ged.all()[0].ged, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'], url_path='getByDomainId')
+    def getByDomainId(self, request, pk):
+        domain = Domain.objects.get(pk=pk)
+        subject = domain.subject
+        exams = list(subject.exams.all())
+        ged = 0
+        for exam in exams:
+            ged += exam.ged.all()[0].ged
+
+        return Response(ged, status=status.HTTP_200_OK)

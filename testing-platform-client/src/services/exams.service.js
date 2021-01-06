@@ -11,7 +11,8 @@ export const examService = {
     getExamTakers,
     generateKnowledgeSpace,
     getXML,
-    getPersonalizedQuestions
+    getPersonalizedQuestions,
+    getExamGED
 };
 
 function getAll() {
@@ -155,6 +156,23 @@ function getXML(examId) {
     return fetch(`${config.apiUrl}/exams/${examId}/getXML`, requestOptions)
         .then(handleResponse)
         .then(result => {
+            return result;
+        });
+}
+
+
+function getExamGED(examId) {
+    const headers = authHeader();
+    headers['Content-Type'] = 'application/json';
+    const requestOptions = {
+        method: 'GET',
+        headers: headers
+    };
+
+    return fetch(`${config.apiUrl}/ged/${examId}/getByExamId`, requestOptions)
+        .then(handleResponse)
+        .then(result => {
+            console.log(result);
             return result;
         });
 }
