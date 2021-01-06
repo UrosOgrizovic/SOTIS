@@ -8,7 +8,8 @@ export const domainService = {
     createLink,
     createNode,
     deleteDomain,
-    addStudentToDomain
+    addStudentToDomain,
+    getDomainGED
 };
 
 function getAll() {
@@ -114,6 +115,24 @@ function addStudentToDomain(data) {
     return fetch(`${config.apiUrl}/domains/${data.domain.id}/add-student/`, requestOptions)
         .then(() => {})
 }
+
+
+function getDomainGED(domainId) {
+    const headers = authHeader();
+    headers['Content-Type'] = 'application/json';
+    const requestOptions = {
+        method: 'GET',
+        headers: headers
+    };
+
+    return fetch(`${config.apiUrl}/ged/${domainId}/getByDomainId`, requestOptions)
+        .then(handleResponse)
+        .then(result => {
+            console.log(result);
+            return result;
+        });
+}
+
 
 function handleResponse(response) {
     return response.text().then(text => {

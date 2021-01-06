@@ -12,7 +12,7 @@ export const examService = {
     generateKnowledgeSpace,
     getXML,
     getPersonalizedQuestions,
-    compareKnowledgeSpaces
+    getExamGED
 };
 
 function getAll() {
@@ -161,7 +161,7 @@ function getXML(examId) {
 }
 
 
-function compareKnowledgeSpaces(examId) {
+function getExamGED(examId) {
     const headers = authHeader();
     headers['Content-Type'] = 'application/json';
     const requestOptions = {
@@ -169,7 +169,7 @@ function compareKnowledgeSpaces(examId) {
         headers: headers
     };
 
-    return fetch(`${config.apiUrl}/exams/${examId}/compareKnowledgeSpaces`, requestOptions)
+    return fetch(`${config.apiUrl}/ged/${examId}/getByExamId`, requestOptions)
         .then(handleResponse)
         .then(result => {
             console.log(result);

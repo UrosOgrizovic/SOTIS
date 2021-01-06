@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.core.files import File
 
 from src.exams.models import Choice, Question, Exam, ExamResult, Domain, Subject, Problem,\
-    ProblemAttachment, ActualProblemAttachment, DiffProblemAttachment
+    ProblemAttachment, ActualProblemAttachment, DiffProblemAttachment, GraphEditDistance
 from src.users.serializers import UserSerializer
 
 
@@ -49,6 +49,7 @@ class ExamResultSerializer(serializers.ModelSerializer):
         model = ExamResult
         fields = ['id', 'score']
 
+
 class CreateExamResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExamResult
@@ -80,6 +81,7 @@ class ProblemAttachmentSerializer(serializers.ModelSerializer):
         model = ProblemAttachment
         exclude = ()
 
+
 class ActualProblemAttachmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActualProblemAttachment
@@ -90,6 +92,7 @@ class DiffProblemAttachmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = DiffProblemAttachment
         exclude = ()
+
 
 class ProblemSerializer(serializers.ModelSerializer):
     """ read_only=True because create() doesn't support writable nested fields by default
@@ -205,3 +208,9 @@ class DomainSerializer(serializers.ModelSerializer):
     class Meta:
         model = Domain
         exclude = ()
+
+
+class GraphEditDistanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GraphEditDistance
+        exclude = ('exam',)

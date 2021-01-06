@@ -91,6 +91,11 @@ class DiffProblemAttachment(models.Model):
     target = models.ForeignKey(Problem, on_delete=models.CASCADE, related_name='diff_source_problems', null=True, blank=True)
 
 
+class GraphEditDistance(models.Model):
+    exam = models.ForeignKey(Exam, on_delete=models.CASCADE, related_name='ged', null=True)
+    ged = models.IntegerField(default=0)
+
+
 @receiver(models.signals.post_save, sender=Subject)
 def create_domain_on_subject_create(sender, instance, created, **kwargs):
     if created:

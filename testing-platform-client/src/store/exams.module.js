@@ -12,7 +12,7 @@ const state = {
     examTakers: [],
     xml: {},
     personalizedQuestions: [],
-    GED: 0
+    examGED: 0
 };
 
 const actions = {
@@ -70,8 +70,8 @@ const actions = {
             commit('setPersonalizedQuestions', result);
         })
     },
-    compareKnowledgeSpaces({commit}, examId) {
-        examService.compareKnowledgeSpaces(examId).then(result => {
+    fetchExamGED({commit}, examId) {
+        examService.getExamGED(examId).then(result => {
             commit('setGED', result);
         })
     }
@@ -107,7 +107,7 @@ const mutations = {
         state.personalizedQuestions = [...questions];
     },
     setGED(state, GED) {
-        state.GED = GED;
+        state.examGED = GED;
     }
 };
 
@@ -141,8 +141,8 @@ const getters = {
     getPersonalizedQuestions(state) {
         return state.personalizedQuestions;
     },
-    getGED(state) {
-        return state.GED;
+    getExamGED(state) {
+        return state.examGED;
     }
 };
 
