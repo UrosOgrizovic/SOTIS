@@ -13,7 +13,7 @@ from src.exams.models import Exam, Question, Choice, Domain, Problem, Subject, P
     ActualProblemAttachment, DiffProblemAttachment, GraphEditDistance
 from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer, CreateExamResultSerializer, \
     DomainSerializer, SubjectSerializer, CreateExamSerializer, ProblemAttachmentSerializer, ProblemSerializer, \
-        GraphEditDistanceSerializer
+    GraphEditDistanceSerializer
 from src.exams.helpers import is_cyclic, order_questions
 from src.users.models import User
 from src.users.serializers import UserSerializer
@@ -159,7 +159,7 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
             source_problem = Problem.objects.get(pk=edge[0])
             target_problem = Problem.objects.get(pk=edge[1])
             DiffProblemAttachment.objects.get_or_create(source=source_problem,
-                                                          target=target_problem)
+                                                        target=target_problem)
         GraphEditDistance.objects.update_or_create(exam=exam, ged=ged)
         return Response({"ged": ged}, status=status.HTTP_200_OK)
 
@@ -388,7 +388,7 @@ class GraphEditDistanceViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSe
     def getByExamId(self, request, pk):
         exam = Exam.objects.get(pk=pk)
         return Response(exam.ged.all()[0].ged, status=status.HTTP_200_OK)
-    
+
     @action(detail=True, methods=['get'], url_path='getByDomainId')
     def getByDomainId(self, request, pk):
         domain = Domain.objects.get(pk=pk)
@@ -397,5 +397,5 @@ class GraphEditDistanceViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSe
         ged = 0
         for exam in exams:
             ged += exam.ged.all()[0].ged
-        
+
         return Response(ged, status=status.HTTP_200_OK)
