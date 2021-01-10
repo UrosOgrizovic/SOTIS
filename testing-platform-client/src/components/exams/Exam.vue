@@ -2,18 +2,19 @@
     <div>
         <el-form :model="form" label-width="120px" :rules="rules" ref="form">
             <h3 style="float: left;">Test title: {{exam.title}}</h3><br><br>
-            <ol style="margin-left: 0; margin-right: 0;">
-                <div v-for="question in personalizedQuestions" :key="question.id">
-                    <li v-html="question.question_text"></li>
-                    <el-form-item>
-                        <el-checkbox v-for="choice in question.choices" :key="choice.id" :label="choice.choice_text" id="choice.id" @change="handleChange(choice.id)"></el-checkbox>
-                    </el-form-item>
-                </div>
-            </ol>
+            <div v-if="currentQuestion">
+                <li v-html="currentQuestion.question_text"></li>
+                <el-form-item>
+                    <el-checkbox v-for="choice in currentQuestion.choices" :key="choice.id" :label="choice.choice_text" id="choice.id" @change="handleChange(choice.id)"></el-checkbox>
+                </el-form-item>
+                <el-form-item prop="choices">
+                    <el-button style="float: right; margin-right: 10px;" type="primary" @click="onSubmit(exam.id)">Add answer</el-button>
+                </el-form-item>
+            </div>
+            <div v-else>
+                There are no questions!
+            </div>
             
-            <el-form-item prop="choices">
-                <el-button style="float: right; margin-right: 10px;" type="primary" @click="onSubmit(exam.id)">Submit</el-button>
-            </el-form-item>
         </el-form>
         <div style="display: flex;" v-if="show && examResult.length > 0" id="score">
             <p>Score: {{examResult[0].score}}</p>
@@ -33,7 +34,8 @@ export default {
             rules: {
                 choices: [{type: 'array', required: true, message: 'Please select at least one answer', trigger: 'change'}]
             },
-            show: false
+            show: false,
+            currentQuestionIndex: 0
         }
     },
     computed: {
@@ -43,16 +45,24 @@ export default {
         }),
         exam() {
             return this.$store.getters['exams/getExam'](this.exam_id)
+        },
+        currentQuestion() {
+            return this.personalizedQuestions.length > this.currentQuestionIndex ? this.personalizedQuestions[this.currentQuestionIndex] : null;
         }
     },
     methods: {
         ...mapActions('exams', ['submitExam', 'fetchPersonalizedQuestions']),
         onSubmit(examId) {
-            this.submitExam({"id": examId, "choices": this.form.choices});
-            this.show = true;          
+            if ((this.currentQuestionIndex + 1) == this.personalizedQuestions.length) {
+                this.submitExam({"id": examId, "choices": this.form.choices});
+                this.show = true;  
+            } else {
+                this.currentQuestionIndex += 1;
+            }
+                    
         },
         handleChange(choiceId) {
-            var idx = this.form.choices.indexOf(choiceId);
+            const idx = this.form.choices.indexOf(choiceId);
             if (idx == -1) {
                 this.form.choices.push(choiceId);
             } else {

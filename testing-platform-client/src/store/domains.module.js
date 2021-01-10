@@ -18,7 +18,7 @@ const actions = {
             commit('setIsNewLink', result);
         })
     },
-    createNode({ commit }, node) {
+    async createNode({ commit }, node) {
         domainService.createNode(node).then(result => {
             commit('setNode', result);
         })

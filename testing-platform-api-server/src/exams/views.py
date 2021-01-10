@@ -292,6 +292,10 @@ class DomainViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin,
         '''
             Returns personalized exams that can be taken next.
         '''
+        if self.request.user.is_teacher:
+            return Response(ExamSerializer(
+                Exam.objects.filter(subject__teacher=self.request.user, subject=self.get_object().subject), many=True).data)
+
         nodes_to_check = list(self.queryset.get(pk=pk).problems.filter(source_problems__isnull=True))
         nodes_to_return = []
 
@@ -396,6 +400,8 @@ class GraphEditDistanceViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSe
         exams = list(subject.exams.all())
         ged = 0
         for exam in exams:
+            if not exam.ged.count() > 0:
+                continue
             ged += exam.ged.all()[0].ged
 
         return Response(ged, status=status.HTTP_200_OK)

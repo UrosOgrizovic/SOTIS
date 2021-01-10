@@ -39,7 +39,7 @@ def is_cyclic_check(node, visited, recursion_stack, nodes, index):
     recursion_stack[index] = False
     return False
 
-def is_cyclic(self, nodes):
+def is_cyclic(nodes):
     visited = [False] * len(nodes)
     recursion_stack = [False] * len(nodes)
 

@@ -196,13 +196,13 @@ export default {
             })
             .catch(() => {});
         },
-        submitProblem() {
+        async submitProblem() {
             const domain = this.currentDomain.id
             const newNode = {
                 domain,
                 ...this.problemForm
             }
-            this.createNode(newNode);
+            await this.createNode(newNode);
             this.problemFormVisibility = false;
             this.fetchDomain(this.currentDomain.id);
         },
