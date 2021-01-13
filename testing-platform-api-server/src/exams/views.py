@@ -14,14 +14,13 @@ from src.exams.models import Exam, Question, Choice, Domain, Problem, Subject, P
 from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer, CreateExamResultSerializer, \
     DomainSerializer, SubjectSerializer, CreateExamSerializer, ProblemAttachmentSerializer, ProblemSerializer, \
     GraphEditDistanceSerializer
-from src.exams.helpers import is_cyclic, order_questions
+from src.exams.helpers import is_cyclic, order_questions, find_problem_level
 from src.users.models import User
 from src.users.serializers import UserSerializer
 from src.users.permissions import IsTeacherUser, IsStudentUser
 from src.config.celery import generate_iita
 
 from learning_spaces.kst.iita import iita
-from learning_spaces.pks.blim import BLIM
 from collections import OrderedDict
 # from Levenshtein import distance as levenshtein_distance
 import networkx as nx
@@ -201,29 +200,49 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def generate_knowledge_states(self, all_problems, start_problem, matrix, len_problems, curr_lst, visited_problems=[]):
+        visited_problems.append(start_problem)
+        pr_ats = ProblemAttachment.objects.filter(source=start_problem.id)
+        temp_curr_lst = curr_lst.copy()
+        if len(pr_ats) > 0:
+            for p_a in pr_ats:
+                pr = p_a.target
+                temp_curr_lst[all_problems.index(pr)] = "1"
+                curr_str = "".join(curr_lst)
+                if curr_str not in matrix:
+                    matrix.append(curr_str)
+                self.generate_knowledge_states(all_problems, pr, matrix, len_problems, temp_curr_lst, visited_problems)
+                temp_curr_lst = curr_lst.copy()
+        else:
+            temp_curr_lst[all_problems.index(start_problem)] = "1"
+            curr_str = "".join(curr_lst)
+            if curr_str not in matrix:
+                matrix.append(curr_str)
+        return matrix
+
     def determine_next_question(self, answered_questions, choices, exam_id):
         exam = Exam.objects.get(id=exam_id)
         all_questions = list(exam.questions.all())
         all_question_ids = [q.id for q in all_questions]
-        all_problems = Problem.objects.filter(question__in=all_question_ids)
+        all_problems = list(Problem.objects.filter(question__in=all_question_ids))
         all_problem_ids = [p.id for p in all_problems]
-        print(f"Problems {all_problems}")
         print(f"Problem ids {all_problem_ids}")
+        len_problems = len(all_problems)
+        start_problem = all_problems[0]
+        curr_taken_idxs = [0]   # indexes of preconditions
+        matrix = []
+        # first problem can always be alone in a knowledge state
+        matrix.append("1" + "0" * (len_problems - 1))
+        curr_lst = ["0" for i in range(len_problems)]
+        curr_lst[0] = "1"
+
         # 1. generate knowledge states
-        pr_ats = ProblemAttachment.objects.filter(source__in=all_question_ids)
-        matrix = [["0" for i in range(len(all_questions))] for i in range(len(all_questions))]
-        for p_a in pr_ats:
-            source_idx = all_question_ids.index(p_a.source.id)
-            target_idx = all_question_ids.index(p_a.target.id)
-            print(source_idx, target_idx)
-            matrix[source_idx][target_idx] = "1"
-        
-        # this format is required by BLIM
-        matrix = [''.join(lst) for lst in matrix]
-        print(f"Matricaaaaaaaaa {matrix}")
+        matrix = self.generate_knowledge_states(all_problems, start_problem, matrix, len_problems, curr_lst)
+        print(f"Matrica {matrix}")
+
         # 2. set response patterns
         response_patterns = OrderedDict()
-        # 3. call BLIM
+        # 3. do Markov
 
 
     @action(detail=True, methods=['post'], url_path='submitQuestion', url_name='submitQuestion', permission_classes=[IsStudentUser])
@@ -231,8 +250,6 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         # print("SUBMITOVAO", request.data)
         answered_questions = request.data['answered_questions']
         choices = request.data['choices']
-        print(answered_questions)
-        print('--')
         print(choices)
         self.determine_next_question(answered_questions, choices, pk)
         return Response({'a': ''}, status=status.HTTP_200_OK)
