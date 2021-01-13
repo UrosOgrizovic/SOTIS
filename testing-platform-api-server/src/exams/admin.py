@@ -1,7 +1,26 @@
 from django_summernote.admin import SummernoteModelAdmin
 from django.contrib import admin
-
+from django.http import HttpResponse
+import csv, datetime
 from src.exams.models import Exam, Choice, Question, Subject, Domain, Problem, ProblemAttachment
+
+
+def export_to_csv(self, request, queryset):
+
+    meta = self.model._meta
+    field_names = [field.name for field in meta.fields]
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename={}.csv'.format(meta)
+    writer = csv.writer(response)
+
+    writer.writerow(field_names)
+    for obj in queryset:
+        row = writer.writerow([getattr(obj, field) for field in field_names])
+
+    return response
+
+export_to_csv.short_description = 'Export to CSV'  #short description
 
 
 class QuestionInline(admin.TabularInline):
@@ -18,7 +37,7 @@ class ExamAdmin(admin.ModelAdmin):
 
     search_fields = ('title',)
     list_display = ('title', 'creator')
-
+    actions = [export_to_csv]
 
 @admin.register(Question)
 class QuestionAdmin(SummernoteModelAdmin):
@@ -28,12 +47,14 @@ class QuestionAdmin(SummernoteModelAdmin):
     list_display = ('question_text', 'exam')
 
     summernote_fields = ('question_text',)
+    actions = [export_to_csv]
 
 
 @admin.register(Choice)
 class ChoiceAdmin(admin.ModelAdmin):
     search_fields = ('choice_text',)
     list_display = ('choice_text', 'question')
+    actions = [export_to_csv]
 
 
 @admin.register(Subject)
