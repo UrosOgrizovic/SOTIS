@@ -26,6 +26,7 @@ class Exam(models.Model):
 class Question(models.Model):
     question_text = models.TextField(blank=True, null=True)
     exam = models.ForeignKey(Exam, on_delete=models.CASCADE, related_name='questions', null=True)
+    num_correct_answers = models.IntegerField(default=0)
 
     def __str__(self):
         return f'{strip_tags(self.question_text)}'
@@ -45,6 +46,7 @@ class ExamResult(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='results', null=True)
     exam = models.ForeignKey(Exam, on_delete=models.CASCADE, related_name='results', null=True)
     choices = models.ManyToManyField(Choice, related_name='results', blank=True)
+    response_pattern = models.CharField(default="", max_length=255)
 
     def __str__(self):
         if self.user and self.exam:

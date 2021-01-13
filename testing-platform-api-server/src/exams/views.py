@@ -14,7 +14,7 @@ from src.exams.models import Exam, Question, Choice, Domain, Problem, Subject, P
 from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer, CreateExamResultSerializer, \
     DomainSerializer, SubjectSerializer, CreateExamSerializer, ProblemAttachmentSerializer, ProblemSerializer, \
     GraphEditDistanceSerializer
-from src.exams.helpers import is_cyclic, order_questions
+from src.exams.helpers import is_cyclic, order_questions, find_problem_level, determine_next_question
 from src.users.models import User
 from src.users.serializers import UserSerializer
 from src.users.permissions import IsTeacherUser, IsStudentUser
@@ -117,24 +117,25 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         exam = Exam.objects.get(id=pk)
         questions = list(exam.questions.all())
         question_ids = [q.id for q in questions]
+        problems = Problem.objects.filter(question__in=question_ids)
+        problem_ids = [p.id for p in problems]
         expected_problem_attachments = []
         expected_nodes = set()
-        for q in questions:
-            pas = list(ProblemAttachment.objects.filter(source=q.problem).values())
+        for p in problems:
+            pas = list(ProblemAttachment.objects.filter(source=p.id).values())
             for pa in pas:
                 # maybe a question could be in multiple tests, hence this check
-                if pa["target_id"] in question_ids:
+                if pa["target_id"] in problem_ids:
                     expected_nodes.add(str(pa["source_id"]))
                     expected_nodes.add(str(pa["target_id"]))
                     expected_problem_attachments.append((pa["source_id"], pa["target_id"]))
-
         actual_problem_attachments = []
         actual_nodes = set()
-        for q in questions:
-            apas = list(ActualProblemAttachment.objects.filter(source=q.problem).values())
+        for p in problems:
+            apas = list(ActualProblemAttachment.objects.filter(source=p.id).values())
             for apa in apas:
                 # maybe a question could be in multiple tests, hence this check
-                if apa["target_id"] in question_ids:
+                if apa["target_id"] in problem_ids:
                     actual_nodes.add(str(apa["source_id"]))
                     actual_nodes.add(str(apa["target_id"]))
                     actual_problem_attachments.append((apa["source_id"], apa["target_id"]))
@@ -169,17 +170,35 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
             Submits exam answers that student had.
         '''
         choices_ids = request.data.get('choices')
+        question_ids = Choice.objects.filter(
+            pk__in=choices_ids, correct_answer=False).values_list('question', flat=True)
         wrong_question_ids = Choice.objects.filter(
-            question__in=choices_ids, correct_answer=False).values_list('question', flat=True)
+            question__in=question_ids, correct_answer=False).values_list('question', flat=True)
 
+        print(f"Question ids {question_ids}")
+        print(f"Choices ids {choices_ids}")
         correct_questions = Question.objects.filter(exam=pk).exclude(id__in=wrong_question_ids)
-        score = Choice.objects.filter(question__in=correct_questions, correct_answer=True).count()
+        print(f"Wrong question ids {wrong_question_ids}")
+        print(f"Correct question ids {correct_questions}")
 
+        correct_choices = Choice.objects.filter(question__in=correct_questions, correct_answer=True)
+        correct_choices_ids = [c_c.id for c_c in correct_choices]
+        response_pattern = []
+        for id in choices_ids:
+            if id in correct_choices_ids:
+                response_pattern.append("1")
+            else:
+                response_pattern.append("0")
+        response_pattern = "".join(response_pattern)
+        print(f"Response pattern {response_pattern}")
+        score = correct_choices.count()
+        print(f"Score {score}/{len(choices_ids)}")
         serializer = self.get_serializer(data={
             'exam': self.get_object().id,
             'user': request.user.id,
             'score': score,
-            'choices': choices_ids
+            'choices': choices_ids,
+            'response_pattern': response_pattern
         })
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -191,6 +210,18 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    
+
+    @action(detail=True, methods=['post'], url_path='submitQuestion', url_name='submitQuestion', permission_classes=[IsStudentUser])
+    def submit_question(self, request, pk):
+        # print("SUBMITOVAO", request.data)
+        answered_questions = request.data['answered_questions']
+        choices = request.data['choices']
+        print(choices)
+        determine_next_question(answered_questions, choices, pk)
+        return Response({'a': ''}, status=status.HTTP_200_OK)
+
+
     @action(detail=True, methods=['get'], url_path='getXML')
     def getXML(self, request, pk):
         '''
@@ -200,12 +231,22 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         data = file.read()
         return Response(data)
 
+
     @action(detail=True, methods=['get'], url_path='personalizedQuestionsOrder')
     def get_personalized_questions_order(self, request, pk):
         questions = self.get_object().questions.all()
 
         questions = sorted(questions, key=order_questions)
         return Response(QuestionSerializer(questions, many=True).data)
+
+
+    @action(detail=True, methods=['get'], url_path='getEasiestQuestion', url_name='getEasiestQuestion')
+    def get_easiest_question(self, request, pk):
+        exam = Exam.objects.get(id=pk)
+        questions = list(exam.questions.all())
+        questions.sort(key=lambda el: el.num_correct_answers)
+        return Response(QuestionSerializer(questions[-1]).data)
+
 
 class SubjectViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin,
                      mixins.ListModelMixin, mixins.CreateModelMixin):

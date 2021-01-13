@@ -29,7 +29,7 @@ class CreateChoiceSerializer(serializers.ModelSerializer):
 class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
-        fields = ['id', 'question_text', 'exam', 'choices']
+        fields = ['id', 'question_text', 'exam', 'choices', 'num_correct_answers']
         depth = 1
 
 
@@ -47,13 +47,13 @@ class ExamSerializer(serializers.ModelSerializer):
 class ExamResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExamResult
-        fields = ['id', 'score']
+        fields = ['id', 'score', 'response_pattern']
 
 
 class CreateExamResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExamResult
-        fields = ['exam', 'score', 'choices', 'user']
+        fields = ['exam', 'score', 'choices', 'user', 'response_pattern']
 
 
 class CreateQuestionSerializer(serializers.ModelSerializer):
