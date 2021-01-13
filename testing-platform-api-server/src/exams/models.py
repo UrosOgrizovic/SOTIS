@@ -26,6 +26,7 @@ class Exam(models.Model):
 class Question(models.Model):
     question_text = models.TextField(blank=True, null=True)
     exam = models.ForeignKey(Exam, on_delete=models.CASCADE, related_name='questions', null=True)
+    num_correct_answers = models.IntegerField(default=0)
 
     def __str__(self):
         return f'{strip_tags(self.question_text)}'

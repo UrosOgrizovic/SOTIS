@@ -29,7 +29,7 @@ class CreateChoiceSerializer(serializers.ModelSerializer):
 class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
-        fields = ['id', 'question_text', 'exam', 'choices']
+        fields = ['id', 'question_text', 'exam', 'choices', 'num_correct_answers']
         depth = 1
 
 

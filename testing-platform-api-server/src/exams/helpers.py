@@ -1,3 +1,6 @@
+from src.exams.models import Exam, Problem, ProblemAttachment
+from collections import OrderedDict
+
 def find_problem_level(problem, level):
     if not problem.source_problems.first():
         return level
@@ -39,6 +42,7 @@ def is_cyclic_check(node, visited, recursion_stack, nodes, index):
     recursion_stack[index] = False
     return False
 
+
 def is_cyclic(nodes):
     visited = [False] * len(nodes)
     recursion_stack = [False] * len(nodes)
@@ -48,3 +52,49 @@ def is_cyclic(nodes):
             if is_cyclic_check(nodes[i], visited, recursion_stack, nodes, i):
                 return True
     return False
+
+
+def generate_knowledge_states(all_problems, start_problem, matrix, len_problems, curr_lst, visited_problems=[]):
+        visited_problems.append(start_problem)
+        pr_ats = ProblemAttachment.objects.filter(source=start_problem.id)
+        temp_curr_lst = curr_lst.copy()
+        if len(pr_ats) > 0:
+            for p_a in pr_ats:
+                pr = p_a.target
+                temp_curr_lst[all_problems.index(pr)] = "1"
+                curr_str = "".join(curr_lst)
+                if curr_str not in matrix:
+                    matrix.append(curr_str)
+                generate_knowledge_states(all_problems, pr, matrix, len_problems, temp_curr_lst, visited_problems)
+                temp_curr_lst = curr_lst.copy()
+        else:
+            temp_curr_lst[all_problems.index(start_problem)] = "1"
+            curr_str = "".join(curr_lst)
+            if curr_str not in matrix:
+                matrix.append(curr_str)
+        return matrix
+
+def determine_next_question(answered_questions, choices, exam_id):
+    exam = Exam.objects.get(id=exam_id)
+    all_questions = list(exam.questions.all())
+    all_question_ids = [q.id for q in all_questions]
+    all_problems = list(Problem.objects.filter(question__in=all_question_ids))
+    all_problem_ids = [p.id for p in all_problems]
+    print(f"Problem ids {all_problem_ids}")
+    len_problems = len(all_problems)
+    start_problem = all_problems[0]
+    curr_taken_idxs = [0]   # indexes of preconditions
+    matrix = []
+    # first problem can always be alone in a knowledge state
+    matrix.append("1" + "0" * (len_problems - 1))
+    curr_lst = ["0" for i in range(len_problems)]
+    curr_lst[0] = "1"
+
+    # 1. generate knowledge states
+    matrix = generate_knowledge_states(all_problems, start_problem, matrix, len_problems, curr_lst)
+    matrix.sort(key=lambda el: el.count("1"))
+    print(f"Matrix of knowledge states {matrix}")
+
+    # 2. set response patterns
+    response_patterns = OrderedDict()
+    # 3. do Markov

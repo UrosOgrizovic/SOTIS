@@ -14,14 +14,13 @@ from src.exams.models import Exam, Question, Choice, Domain, Problem, Subject, P
 from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer, CreateExamResultSerializer, \
     DomainSerializer, SubjectSerializer, CreateExamSerializer, ProblemAttachmentSerializer, ProblemSerializer, \
     GraphEditDistanceSerializer
-from src.exams.helpers import is_cyclic, order_questions, find_problem_level
+from src.exams.helpers import is_cyclic, order_questions, find_problem_level, determine_next_question
 from src.users.models import User
 from src.users.serializers import UserSerializer
 from src.users.permissions import IsTeacherUser, IsStudentUser
 from src.config.celery import generate_iita
 
 from learning_spaces.kst.iita import iita
-from collections import OrderedDict
 # from Levenshtein import distance as levenshtein_distance
 import networkx as nx
 
@@ -200,50 +199,7 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def generate_knowledge_states(self, all_problems, start_problem, matrix, len_problems, curr_lst, visited_problems=[]):
-        visited_problems.append(start_problem)
-        pr_ats = ProblemAttachment.objects.filter(source=start_problem.id)
-        temp_curr_lst = curr_lst.copy()
-        if len(pr_ats) > 0:
-            for p_a in pr_ats:
-                pr = p_a.target
-                temp_curr_lst[all_problems.index(pr)] = "1"
-                curr_str = "".join(curr_lst)
-                if curr_str not in matrix:
-                    matrix.append(curr_str)
-                self.generate_knowledge_states(all_problems, pr, matrix, len_problems, temp_curr_lst, visited_problems)
-                temp_curr_lst = curr_lst.copy()
-        else:
-            temp_curr_lst[all_problems.index(start_problem)] = "1"
-            curr_str = "".join(curr_lst)
-            if curr_str not in matrix:
-                matrix.append(curr_str)
-        return matrix
-
-    def determine_next_question(self, answered_questions, choices, exam_id):
-        exam = Exam.objects.get(id=exam_id)
-        all_questions = list(exam.questions.all())
-        all_question_ids = [q.id for q in all_questions]
-        all_problems = list(Problem.objects.filter(question__in=all_question_ids))
-        all_problem_ids = [p.id for p in all_problems]
-        print(f"Problem ids {all_problem_ids}")
-        len_problems = len(all_problems)
-        start_problem = all_problems[0]
-        curr_taken_idxs = [0]   # indexes of preconditions
-        matrix = []
-        # first problem can always be alone in a knowledge state
-        matrix.append("1" + "0" * (len_problems - 1))
-        curr_lst = ["0" for i in range(len_problems)]
-        curr_lst[0] = "1"
-
-        # 1. generate knowledge states
-        matrix = self.generate_knowledge_states(all_problems, start_problem, matrix, len_problems, curr_lst)
-        print(f"Matrica {matrix}")
-
-        # 2. set response patterns
-        response_patterns = OrderedDict()
-        # 3. do Markov
-
+    
 
     @action(detail=True, methods=['post'], url_path='submitQuestion', url_name='submitQuestion', permission_classes=[IsStudentUser])
     def submit_question(self, request, pk):
@@ -251,8 +207,9 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         answered_questions = request.data['answered_questions']
         choices = request.data['choices']
         print(choices)
-        self.determine_next_question(answered_questions, choices, pk)
+        determine_next_question(answered_questions, choices, pk)
         return Response({'a': ''}, status=status.HTTP_200_OK)
+
 
     @action(detail=True, methods=['get'], url_path='getXML')
     def getXML(self, request, pk):
@@ -263,12 +220,22 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         data = file.read()
         return Response(data)
 
+
     @action(detail=True, methods=['get'], url_path='personalizedQuestionsOrder')
     def get_personalized_questions_order(self, request, pk):
         questions = self.get_object().questions.all()
 
         questions = sorted(questions, key=order_questions)
         return Response(QuestionSerializer(questions, many=True).data)
+
+
+    @action(detail=True, methods=['get'], url_path='getEasiestQuestion', url_name='getEasiestQuestion')
+    def get_easiest_question(self, request, pk):
+        exam = Exam.objects.get(id=pk)
+        questions = list(exam.questions.all())
+        questions.sort(key=lambda el: el.num_correct_answers)
+        return Response(QuestionSerializer(questions[-1]).data)
+
 
 class SubjectViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin,
                      mixins.ListModelMixin, mixins.CreateModelMixin):
