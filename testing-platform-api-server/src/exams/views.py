@@ -181,13 +181,24 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         print(f"Wrong question ids {wrong_question_ids}")
         print(f"Correct question ids {correct_questions}")
 
-        score = Choice.objects.filter(question__in=correct_questions, correct_answer=True).count()
+        correct_choices = Choice.objects.filter(question__in=correct_questions, correct_answer=True)
+        correct_choices_ids = [c_c.id for c_c in correct_choices]
+        response_pattern = []
+        for id in choices_ids:
+            if id in correct_choices_ids:
+                response_pattern.append("1")
+            else:
+                response_pattern.append("0")
+        response_pattern = "".join(response_pattern)
+        print(f"Response pattern {response_pattern}")
+        score = correct_choices.count()
         print(f"Score {score}/{len(choices_ids)}")
         serializer = self.get_serializer(data={
             'exam': self.get_object().id,
             'user': request.user.id,
             'score': score,
-            'choices': choices_ids
+            'choices': choices_ids,
+            'response_pattern': response_pattern
         })
         serializer.is_valid(raise_exception=True)
         serializer.save()
