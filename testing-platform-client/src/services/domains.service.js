@@ -128,7 +128,6 @@ function getDomainGED(domainId) {
     return fetch(`${config.apiUrl}/ged/${domainId}/getByDomainId`, requestOptions)
         .then(handleResponse)
         .then(result => {
-            console.log(result);
             return result;
         });
 }

@@ -12,7 +12,8 @@ export const examService = {
     generateKnowledgeSpace,
     getXML,
     getPersonalizedQuestions,
-    getExamGED
+    getExamGED,
+    submitQuestion
 };
 
 function getAll() {
@@ -64,6 +65,26 @@ function submitExam(examData) {
     };
 
     return fetch(`${config.apiUrl}/exams/${examData['id']}/submitExam/`, requestOptions)
+        .then(handleResponse)
+        .then(result => {
+            return result;
+        });
+}
+
+function submitQuestion(questionData) {
+    const token = JSON.parse(localStorage.getItem('user')).token;
+    
+    const headers = authHeader();
+    headers['Content-Type'] = 'application/json';
+    headers['X-CSRFToken'] = token;
+
+    const requestOptions = {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(questionData)
+    };
+    let examId = questionData.answered_questions[0].exam.id;
+    return fetch(`${config.apiUrl}/exams/${examId}/submitQuestion/`, requestOptions)
         .then(handleResponse)
         .then(result => {
             return result;

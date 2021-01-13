@@ -21,6 +21,8 @@ from src.users.permissions import IsTeacherUser, IsStudentUser
 from src.config.celery import generate_iita
 
 from learning_spaces.kst.iita import iita
+from learning_spaces.pks.blim import BLIM
+from collections import OrderedDict
 # from Levenshtein import distance as levenshtein_distance
 import networkx as nx
 
@@ -117,24 +119,25 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         exam = Exam.objects.get(id=pk)
         questions = list(exam.questions.all())
         question_ids = [q.id for q in questions]
+        problems = Problem.objects.filter(question__in=question_ids)
+        problem_ids = [p.id for p in problems]
         expected_problem_attachments = []
         expected_nodes = set()
-        for q in questions:
-            pas = list(ProblemAttachment.objects.filter(source=q.problem).values())
+        for p in problems:
+            pas = list(ProblemAttachment.objects.filter(source=p.id).values())
             for pa in pas:
                 # maybe a question could be in multiple tests, hence this check
-                if pa["target_id"] in question_ids:
+                if pa["target_id"] in problem_ids:
                     expected_nodes.add(str(pa["source_id"]))
                     expected_nodes.add(str(pa["target_id"]))
                     expected_problem_attachments.append((pa["source_id"], pa["target_id"]))
-
         actual_problem_attachments = []
         actual_nodes = set()
-        for q in questions:
-            apas = list(ActualProblemAttachment.objects.filter(source=q.problem).values())
+        for p in problems:
+            apas = list(ActualProblemAttachment.objects.filter(source=p.id).values())
             for apa in apas:
                 # maybe a question could be in multiple tests, hence this check
-                if apa["target_id"] in question_ids:
+                if apa["target_id"] in problem_ids:
                     actual_nodes.add(str(apa["source_id"]))
                     actual_nodes.add(str(apa["target_id"]))
                     actual_problem_attachments.append((apa["source_id"], apa["target_id"]))
@@ -169,12 +172,19 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
             Submits exam answers that student had.
         '''
         choices_ids = request.data.get('choices')
+        question_ids = Choice.objects.filter(
+            pk__in=choices_ids, correct_answer=False).values_list('question', flat=True)
         wrong_question_ids = Choice.objects.filter(
-            question__in=choices_ids, correct_answer=False).values_list('question', flat=True)
+            question__in=question_ids, correct_answer=False).values_list('question', flat=True)
 
+        print(f"Question ids {question_ids}")
+        print(f"Choices ids {choices_ids}")
         correct_questions = Question.objects.filter(exam=pk).exclude(id__in=wrong_question_ids)
-        score = Choice.objects.filter(question__in=correct_questions, correct_answer=True).count()
+        print(f"Wrong question ids {wrong_question_ids}")
+        print(f"Correct question ids {correct_questions}")
 
+        score = Choice.objects.filter(question__in=correct_questions, correct_answer=True).count()
+        print(f"Score {score}/{len(choices_ids)}")
         serializer = self.get_serializer(data={
             'exam': self.get_object().id,
             'user': request.user.id,
@@ -190,6 +200,42 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
             self.request.user.passed_exams.add(self.get_object())
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def determine_next_question(self, answered_questions, choices, exam_id):
+        exam = Exam.objects.get(id=exam_id)
+        all_questions = list(exam.questions.all())
+        all_question_ids = [q.id for q in all_questions]
+        all_problems = Problem.objects.filter(question__in=all_question_ids)
+        all_problem_ids = [p.id for p in all_problems]
+        print(f"Problems {all_problems}")
+        print(f"Problem ids {all_problem_ids}")
+        # 1. generate knowledge states
+        pr_ats = ProblemAttachment.objects.filter(source__in=all_question_ids)
+        matrix = [["0" for i in range(len(all_questions))] for i in range(len(all_questions))]
+        for p_a in pr_ats:
+            source_idx = all_question_ids.index(p_a.source.id)
+            target_idx = all_question_ids.index(p_a.target.id)
+            print(source_idx, target_idx)
+            matrix[source_idx][target_idx] = "1"
+        
+        # this format is required by BLIM
+        matrix = [''.join(lst) for lst in matrix]
+        print(f"Matricaaaaaaaaa {matrix}")
+        # 2. set response patterns
+        response_patterns = OrderedDict()
+        # 3. call BLIM
+
+
+    @action(detail=True, methods=['post'], url_path='submitQuestion', url_name='submitQuestion', permission_classes=[IsStudentUser])
+    def submit_question(self, request, pk):
+        # print("SUBMITOVAO", request.data)
+        answered_questions = request.data['answered_questions']
+        choices = request.data['choices']
+        print(answered_questions)
+        print('--')
+        print(choices)
+        self.determine_next_question(answered_questions, choices, pk)
+        return Response({'a': ''}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['get'], url_path='getXML')
     def getXML(self, request, pk):

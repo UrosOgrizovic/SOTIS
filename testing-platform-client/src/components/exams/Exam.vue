@@ -35,7 +35,8 @@ export default {
                 choices: [{type: 'array', required: true, message: 'Please select at least one answer', trigger: 'change'}]
             },
             show: false,
-            currentQuestionIndex: 0
+            currentQuestionIndex: 0,
+            answeredQuestions: []
         }
     },
     computed: {
@@ -51,12 +52,14 @@ export default {
         }
     },
     methods: {
-        ...mapActions('exams', ['submitExam', 'fetchPersonalizedQuestions']),
+        ...mapActions('exams', ['submitExam', 'fetchPersonalizedQuestions', 'submitQuestion']),
         onSubmit(examId) {
             if ((this.currentQuestionIndex + 1) == this.personalizedQuestions.length) {
                 this.submitExam({"id": examId, "choices": this.form.choices});
                 this.show = true;  
             } else {
+                this.answeredQuestions.push(this.currentQuestion);
+                this.submitQuestion({"answered_questions": this.answeredQuestions, "choices": this.form.choices});
                 this.currentQuestionIndex += 1;
             }
                     
