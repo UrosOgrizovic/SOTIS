@@ -210,11 +210,10 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    
+
 
     @action(detail=True, methods=['post'], url_path='submitQuestion', url_name='submitQuestion', permission_classes=[IsStudentUser])
     def submit_question(self, request, pk):
-        # print("SUBMITOVAO", request.data)
         answered_questions = request.data['answered_questions']
         choices = request.data['choices']
         print(choices)

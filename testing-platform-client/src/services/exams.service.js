@@ -33,7 +33,7 @@ function getAll() {
 
 function addNewExam(data) {
     const token = JSON.parse(localStorage.getItem('user')).token;
-    
+
     const headers = authHeader();
     headers['Content-Type'] = 'application/json';
     headers['X-CSRFToken'] = token;
@@ -53,7 +53,7 @@ function addNewExam(data) {
 
 function submitExam(examData) {
     const token = JSON.parse(localStorage.getItem('user')).token;
-    
+
     const headers = authHeader();
     headers['Content-Type'] = 'application/json';
     headers['X-CSRFToken'] = token;
@@ -73,7 +73,7 @@ function submitExam(examData) {
 
 function submitQuestion(questionData) {
     const token = JSON.parse(localStorage.getItem('user')).token;
-    
+
     const headers = authHeader();
     headers['Content-Type'] = 'application/json';
     headers['X-CSRFToken'] = token;
@@ -83,6 +83,7 @@ function submitQuestion(questionData) {
         headers: headers,
         body: JSON.stringify(questionData)
     };
+    console.log(questionData.answered_questions);
     let examId = questionData.answered_questions[0].exam.id;
     return fetch(`${config.apiUrl}/exams/${examId}/submitQuestion/`, requestOptions)
         .then(handleResponse)
@@ -94,7 +95,7 @@ function submitQuestion(questionData) {
 function deleteExam(data) {
     const headers = authHeader();
     headers['Content-Type'] = 'application/json';
-    
+
     const requestOptions = {
         method: 'DELETE',
         headers: headers

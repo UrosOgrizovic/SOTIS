@@ -14,12 +14,12 @@
             <div v-else>
                 There are no questions!
             </div>
-            
+
         </el-form>
         <div style="display: flex;" v-if="show && examResult.length > 0" id="score">
             <p>Score: {{examResult[0].score}}</p>
         </div>
-        
+
     </div>
 </template>
 
@@ -36,7 +36,7 @@ export default {
             },
             show: false,
             currentQuestionIndex: 0,
-            answeredQuestions: []
+            answeredQuestions: {}
         }
     },
     computed: {
@@ -54,15 +54,30 @@ export default {
     methods: {
         ...mapActions('exams', ['submitExam', 'fetchPersonalizedQuestions', 'submitQuestion']),
         onSubmit(examId) {
+            let lastIdx = this.form.choices.length - 1
+            for (let i = 0; i < lastIdx; i++) {
+                // each choice can appear only once in this.form.choices
+                if (this.form.choices[i] == this.form.choices[lastIdx]) {
+                    this.form.choices[i] = this.form.choices[lastIdx]
+                    this.form.choices = this.form.choices.slice(0, lastIdx);
+                }
+            }
             if ((this.currentQuestionIndex + 1) == this.personalizedQuestions.length) {
                 this.submitExam({"id": examId, "choices": this.form.choices});
-                this.show = true;  
+                this.show = true;
             } else {
-                this.answeredQuestions.push(this.currentQuestion);
-                this.submitQuestion({"answered_questions": this.answeredQuestions, "choices": this.form.choices});
+                // each question can appear only once in answeredQuestions
+                this.answeredQuestions[this.currentQuestion.id] = this.currentQuestion;
+                let answeredQuestions = [];
+                for (let key in this.answeredQuestions) {
+                    answeredQuestions.push(this.answeredQuestions[key]);
+                }
+                // console.log(this.answeredQuestions)
+                // console.log(this.form.choices)
+                this.submitQuestion({"answered_questions": answeredQuestions, "choices": this.form.choices});
                 this.currentQuestionIndex += 1;
             }
-                    
+
         },
         handleChange(choiceId) {
             const idx = this.form.choices.indexOf(choiceId);
