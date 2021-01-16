@@ -13,7 +13,8 @@ export const examService = {
     getXML,
     getPersonalizedQuestions,
     getExamGED,
-    submitQuestion
+    submitQuestion,
+    updateExam
 };
 
 function getAll() {
@@ -113,6 +114,24 @@ function getPersonalizedExams(data) {
     };
 
     return fetch(`${config.apiUrl}/domains/${data.id}/personalized_exams`, requestOptions)
+        .then(handleResponse)
+        .then(exams => {
+            return exams;
+        });
+}
+
+function updateExam(data) {
+    const headers = authHeader();
+    headers['Content-Type'] = 'application/json';
+    const id = data.id
+    delete data.id
+    const requestOptions = {
+        method: 'PATCH',
+        headers: headers,
+        body: JSON.stringify(data)
+    };
+
+    return fetch(`${config.apiUrl}/exams/${id}/`, requestOptions)
         .then(handleResponse)
         .then(exams => {
             return exams;

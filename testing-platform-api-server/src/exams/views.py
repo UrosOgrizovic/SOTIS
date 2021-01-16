@@ -14,7 +14,7 @@ from src.exams.models import Exam, Question, Choice, Domain, Problem, Subject, P
 from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer, CreateExamResultSerializer, \
     DomainSerializer, SubjectSerializer, CreateExamSerializer, ProblemAttachmentSerializer, ProblemSerializer, \
     GraphEditDistanceSerializer
-from src.exams.helpers import is_cyclic, order_questions, find_problem_level, determine_next_question
+from src.exams.helpers import is_cyclic, order_questions_actual, order_questions_expected, determine_next_question
 from src.users.models import User
 from src.users.serializers import UserSerializer
 from src.users.permissions import IsTeacherUser, IsStudentUser
@@ -210,17 +210,15 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    
-
-    @action(detail=True, methods=['post'], url_path='submitQuestion', url_name='submitQuestion', permission_classes=[IsStudentUser])
+    @action(detail=True, methods=['post'],
+            url_path='submitQuestion', url_name='submitQuestion', permission_classes=[IsStudentUser])
     def submit_question(self, request, pk):
         # print("SUBMITOVAO", request.data)
         answered_questions = request.data['answered_questions']
         choices = request.data['choices']
-        print(choices)
+
         determine_next_question(answered_questions, choices, pk)
         return Response({'a': ''}, status=status.HTTP_200_OK)
-
 
     @action(detail=True, methods=['get'], url_path='getXML')
     def getXML(self, request, pk):
@@ -231,14 +229,13 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         data = file.read()
         return Response(data)
 
-
     @action(detail=True, methods=['get'], url_path='personalizedQuestionsOrder')
     def get_personalized_questions_order(self, request, pk):
         questions = self.get_object().questions.all()
 
-        questions = sorted(questions, key=order_questions)
+        key = order_questions_actual if self.get_object().mode == 'actual' else order_questions_expected
+        questions = sorted(questions, key=key)
         return Response(QuestionSerializer(questions, many=True).data)
-
 
     @action(detail=True, methods=['get'], url_path='getEasiestQuestion', url_name='getEasiestQuestion')
     def get_easiest_question(self, request, pk):

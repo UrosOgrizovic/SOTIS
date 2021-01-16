@@ -20,6 +20,7 @@ django-money==1.1
 jsonfield==3.1.0
 
 numpy==1.13.1
+scipy==1.5.4
 
 # Knowledge space
 git+git://github.com/SavaKatic/kst@main

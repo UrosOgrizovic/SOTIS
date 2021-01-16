@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.utils.html import strip_tags
 from django.dispatch import receiver
-
+from src.common.constants import EXAM_MODES_CHOICES, EXPECTED_MODE
 
 class Subject(models.Model):
     title = models.CharField(max_length=255, null=True)
@@ -18,6 +18,7 @@ class Exam(models.Model):
     title = models.CharField(max_length=255, null=True)
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='exams', null=True)
     completed_by = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='passed_exams', blank=True)
+    mode = models.CharField(max_length=50, choices=EXAM_MODES_CHOICES, default=EXPECTED_MODE)
 
     def __str__(self):
         return f'{self.title}'

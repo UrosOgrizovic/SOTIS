@@ -80,6 +80,9 @@ const actions = {
         examService.submitQuestion(data).then(result => {
             commit('setNextQuestion', result);
         })
+    },
+    updateExam(_, data) {
+        examService.updateExam(data);
     }
 };
 
