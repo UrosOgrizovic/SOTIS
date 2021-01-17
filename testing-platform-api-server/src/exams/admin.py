@@ -1,7 +1,7 @@
 from django_summernote.admin import SummernoteModelAdmin
 from django.contrib import admin
 from django.http import HttpResponse
-import csv, datetime
+import csv
 from src.exams.models import Exam, Choice, Question, Subject, Domain, Problem, ProblemAttachment
 
 
@@ -16,11 +16,12 @@ def export_to_csv(self, request, queryset):
 
     writer.writerow(field_names)
     for obj in queryset:
-        row = writer.writerow([getattr(obj, field) for field in field_names])
+        writer.writerow([getattr(obj, field) for field in field_names])
 
     return response
 
-export_to_csv.short_description = 'Export to CSV'  #short description
+
+export_to_csv.short_description = 'Export to CSV'  # short description
 
 
 class QuestionInline(admin.TabularInline):
