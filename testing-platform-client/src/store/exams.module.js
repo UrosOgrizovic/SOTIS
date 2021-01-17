@@ -13,7 +13,8 @@ const state = {
     xml: {},
     personalizedQuestions: [],
     examGED: 0,
-    nextQuestion: {}
+    nextQuestion: {},
+    statesLikelihoods: {}
 };
 
 const actions = {
@@ -78,7 +79,12 @@ const actions = {
     },
     submitQuestion({commit}, data) {
         examService.submitQuestion(data).then(result => {
-            commit('setNextQuestion', result);
+            commit('setNextQuestionAndStatesLikelihoods', result);
+        })
+    },
+    fetchStatesLikelihoods({commit}, examId) {
+        examService.getStatesLikelihoods(examId).then(result => {
+            commit('setStatesLikelihoods', result);
         })
     },
     updateExam(_, data) {
@@ -118,8 +124,12 @@ const mutations = {
     setGED(state, GED) {
         state.examGED = GED;
     },
-    setNextQuestion(state, nextQuestion) {
-        state.nextQuestion = nextQuestion;
+    setNextQuestionAndStatesLikelihoods(state, result) {
+        state.nextQuestion = result["next_question"];
+        state.statesLikelihoods = result["states_likelihoods"];
+    },
+    setStatesLikelihoods(state, statesLikelihoods) {
+        state.statesLikelihoods = statesLikelihoods;
     }
 };
 
@@ -158,6 +168,9 @@ const getters = {
     },
     getNextQuestion(state) {
         return state.nextQuestion;
+    },
+    getStatesLikelihoods(state) {
+        return state.statesLikelihoods;
     }
 };
 

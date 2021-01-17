@@ -14,6 +14,7 @@ export const examService = {
     getPersonalizedQuestions,
     getExamGED,
     submitQuestion,
+    getStatesLikelihoods,
     updateExam
 };
 
@@ -34,7 +35,7 @@ function getAll() {
 
 function addNewExam(data) {
     const token = JSON.parse(localStorage.getItem('user')).token;
-    
+
     const headers = authHeader();
     headers['Content-Type'] = 'application/json';
     headers['X-CSRFToken'] = token;
@@ -54,7 +55,7 @@ function addNewExam(data) {
 
 function submitExam(examData) {
     const token = JSON.parse(localStorage.getItem('user')).token;
-    
+
     const headers = authHeader();
     headers['Content-Type'] = 'application/json';
     headers['X-CSRFToken'] = token;
@@ -74,7 +75,7 @@ function submitExam(examData) {
 
 function submitQuestion(questionData) {
     const token = JSON.parse(localStorage.getItem('user')).token;
-    
+
     const headers = authHeader();
     headers['Content-Type'] = 'application/json';
     headers['X-CSRFToken'] = token;
@@ -95,7 +96,7 @@ function submitQuestion(questionData) {
 function deleteExam(data) {
     const headers = authHeader();
     headers['Content-Type'] = 'application/json';
-    
+
     const requestOptions = {
         method: 'DELETE',
         headers: headers
@@ -212,7 +213,22 @@ function getExamGED(examId) {
     return fetch(`${config.apiUrl}/ged/${examId}/getByExamId`, requestOptions)
         .then(handleResponse)
         .then(result => {
-            console.log(result);
+            return result;
+        });
+}
+
+
+function getStatesLikelihoods(examId) {
+    const headers = authHeader();
+    headers['Content-Type'] = 'application/json';
+    const requestOptions = {
+        method: 'GET',
+        headers: headers
+    };
+
+    return fetch(`${config.apiUrl}/exams/${examId}/getStatesLikelihoods`, requestOptions)
+        .then(handleResponse)
+        .then(result => {
             return result;
         });
 }

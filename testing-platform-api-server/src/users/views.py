@@ -9,6 +9,7 @@ from src.users.permissions import IsUserOrReadOnly
 from src.users.serializers import CreateUserSerializer, UserSerializer
 from src.common.constants import USER_GROUP_STUDENT
 from src.users.permissions import IsTeacherUser
+from src.exams.models import ExamResult
 
 class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                   mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -44,3 +45,12 @@ class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
             permission_classes=[IsAuthenticated, IsTeacherUser])
     def get_students(self, instance):
         return Response(UserSerializer(self.get_queryset().filter(groups__name=USER_GROUP_STUDENT), many=True).data)
+
+    @action(detail=False, methods=['get'], url_path=r'getCurrentKnowledgeState/(?P<user_id>.*)/(?P<exam_id>\d+)',
+            url_name='getCurrentKnowledgeState',
+            permission_classes=[IsAuthenticated])
+    def get_current_knowledge_state(self, request, user_id, exam_id):
+        print(user_id, exam_id)
+        exam_results = list(ExamResult.objects.filter(exam=exam_id, user=user_id).values())
+        current_state = exam_results[-1]["state"]
+        return Response({"state": current_state}, status=status.HTTP_200_OK)
