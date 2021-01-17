@@ -8,13 +8,16 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.core.files import File
 from django.conf import settings
+from django.forms.models import model_to_dict
 
 from src.exams.models import Exam, Question, Choice, Domain, Problem, Subject, ProblemAttachment, ExamResult, \
     ActualProblemAttachment, DiffProblemAttachment, GraphEditDistance
 from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer, CreateExamResultSerializer, \
     DomainSerializer, SubjectSerializer, CreateExamSerializer, ProblemAttachmentSerializer, ProblemSerializer, \
     GraphEditDistanceSerializer
-from src.exams.helpers import is_cyclic, order_questions, find_problem_level, determine_next_question
+from src.exams.helpers import is_cyclic, order_questions, find_problem_level, generate_knowledge_states,\
+    update_likelihoods_per_response_patterns, determine_next_question,\
+    update_likelihoods_per_number_of_students_in_state
 from src.users.models import User
 from src.users.serializers import UserSerializer
 from src.users.permissions import IsTeacherUser, IsStudentUser
@@ -183,6 +186,10 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
         correct_choices = Choice.objects.filter(question__in=correct_questions, correct_answer=True)
         correct_choices_ids = [c_c.id for c_c in correct_choices]
+
+        states_likelihoods = request.data["states_likelihoods"]
+        # select state with highest likelihood
+        current_state = max(states_likelihoods, key=lambda key: states_likelihoods[key])
         response_pattern = []
         for id in choices_ids:
             if id in correct_choices_ids:
@@ -198,7 +205,8 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
             'user': request.user.id,
             'score': score,
             'choices': choices_ids,
-            'response_pattern': response_pattern
+            'response_pattern': response_pattern,
+            'state': current_state
         })
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -210,16 +218,16 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
-
     @action(detail=True, methods=['post'], url_path='submitQuestion', url_name='submitQuestion', permission_classes=[IsStudentUser])
     def submit_question(self, request, pk):
         answered_questions = request.data['answered_questions']
         choices = request.data['choices']
-        print(choices)
-        determine_next_question(answered_questions, choices, pk)
-        return Response({'a': ''}, status=status.HTTP_200_OK)
-
+        states_likelihoods = request.data['states_likelihoods']
+        print(f"Choices ids {choices}")
+        print(f"states_likelihoods before update {states_likelihoods}")
+        next_question, states_likelihoods = determine_next_question(answered_questions,
+                                                                    choices, pk, states_likelihoods)
+        return Response({"next_question": QuestionSerializer(next_question).data, "states_likelihoods": states_likelihoods}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['get'], url_path='getXML')
     def getXML(self, request, pk):
@@ -230,7 +238,6 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         data = file.read()
         return Response(data)
 
-
     @action(detail=True, methods=['get'], url_path='personalizedQuestionsOrder')
     def get_personalized_questions_order(self, request, pk):
         questions = self.get_object().questions.all()
@@ -238,6 +245,48 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         questions = sorted(questions, key=order_questions)
         return Response(QuestionSerializer(questions, many=True).data)
 
+    @action(detail=True, methods=['get'], url_path='getStatesLikelihoods', url_name='getStatesLikelihoods')
+    def get_states_likelihoods(self, request, pk):
+        """Gets called once every time an exam is taken,
+        before the first question is loaded
+        """
+        exam = Exam.objects.get(id=pk)
+        all_questions = list(exam.questions.all())
+        all_question_ids = [q.id for q in all_questions]
+        all_problems = list(Problem.objects.filter(question__in=all_question_ids))
+        len_problems = len(all_problems)
+        start_problem = all_problems[0]
+        state_matrix = []
+        state_matrix.append("1" + "0" * (len_problems - 1))
+        curr_lst = ["0" for i in range(len_problems)]
+        curr_lst[0] = "1"
+
+        # 1. generate knowledge states
+        state_matrix = generate_knowledge_states(all_problems, start_problem, state_matrix,
+                              len_problems, curr_lst)
+        num_states = len(state_matrix)
+        states_likelihoods = {}
+        for state in state_matrix:
+            states_likelihoods[state] = round(1/num_states, 2)
+        print(f"states_likelihoods initial {states_likelihoods}")
+
+        # 2. set response patterns
+        response_patterns = {state: 0 for state in state_matrix}
+        exam_results = ExamResult.objects.filter(exam=pk)
+
+        for e_r in exam_results:
+            res_pat = e_r.response_pattern
+            response_patterns[res_pat] = response_patterns[res_pat] + 1 if res_pat in response_patterns else 1
+        num_response_patterns = sum(response_patterns.values())
+        # 3. response pattern-based update
+        states_likelihoods = update_likelihoods_per_response_patterns(state_matrix, response_patterns,\
+                                                                    num_response_patterns)
+        print(f"states_likelihoods after update based on response patterns {states_likelihoods}")
+        # 4. state frequency-based update
+        states_likelihoods = update_likelihoods_per_number_of_students_in_state(states_likelihoods,
+                                                                                exam_results)
+        print(f"states_likelihoods after update based on number of students per state {states_likelihoods}")
+        return Response(states_likelihoods, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['get'], url_path='getEasiestQuestion', url_name='getEasiestQuestion')
     def get_easiest_question(self, request, pk):

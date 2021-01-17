@@ -42,40 +42,45 @@ export default {
     computed: {
         ...mapGetters({
             examResult: 'exams/getExamResult',
-            personalizedQuestions: 'exams/getPersonalizedQuestions'
+            personalizedQuestions: 'exams/getPersonalizedQuestions',
+            nextQuestion: 'exams/getNextQuestion',
+            statesLikelihoods: 'exams/getStatesLikelihoods'
         }),
         exam() {
             return this.$store.getters['exams/getExam'](this.exam_id)
         },
         currentQuestion() {
-            return this.personalizedQuestions.length > this.currentQuestionIndex ? this.personalizedQuestions[this.currentQuestionIndex] : null;
+            if (this.currentQuestionIndex == 0) {
+                return this.personalizedQuestions.length > this.currentQuestionIndex ? this.personalizedQuestions[this.currentQuestionIndex] : null;
+            }
+            return this.nextQuestion;
         }
     },
     methods: {
-        ...mapActions('exams', ['submitExam', 'fetchPersonalizedQuestions', 'submitQuestion']),
+        ...mapActions('exams', ['submitExam', 'fetchPersonalizedQuestions', 'submitQuestion', 'fetchStatesLikelihoods']),
         onSubmit(examId) {
             let lastIdx = this.form.choices.length - 1
             for (let i = 0; i < lastIdx; i++) {
-                // each choice can appear only once in this.form.choices
+                // each choice can only appear once in this.form.choices
                 if (this.form.choices[i] == this.form.choices[lastIdx]) {
                     this.form.choices[i] = this.form.choices[lastIdx]
                     this.form.choices = this.form.choices.slice(0, lastIdx);
                 }
             }
-            if ((this.currentQuestionIndex + 1) == this.personalizedQuestions.length) {
-                this.submitExam({"id": examId, "choices": this.form.choices});
+            // each question can only appear once in answeredQuestions
+            this.answeredQuestions[this.currentQuestion.id] = this.currentQuestion;
+            if (Object.keys(this.answeredQuestions).length == this.personalizedQuestions.length) {
+                this.submitExam({"id": examId, "choices": this.form.choices, "states_likelihoods": this.statesLikelihoods});
                 this.show = true;
             } else {
-                // each question can appear only once in answeredQuestions
-                this.answeredQuestions[this.currentQuestion.id] = this.currentQuestion;
+                // pass list instead of object, so this is just reformatting
                 let answeredQuestions = [];
                 for (let key in this.answeredQuestions) {
                     answeredQuestions.push(this.answeredQuestions[key]);
                 }
-                // console.log(this.answeredQuestions)
-                // console.log(this.form.choices)
-                this.submitQuestion({"answered_questions": answeredQuestions, "choices": this.form.choices});
-                this.currentQuestionIndex += 1;
+                this.submitQuestion({"answered_questions": answeredQuestions, "choices": this.form.choices,
+                                     "states_likelihoods": this.statesLikelihoods});
+                this.currentQuestionIndex = this.answeredQuestions.length;
             }
 
         },
@@ -91,6 +96,7 @@ export default {
     created() {
         this.exam_id = this.$route.params.exam_id
         this.fetchPersonalizedQuestions(this.exam_id)
+        this.fetchStatesLikelihoods(this.exam_id);
     }
 }
 </script>

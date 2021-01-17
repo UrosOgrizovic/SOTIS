@@ -47,13 +47,13 @@ class ExamSerializer(serializers.ModelSerializer):
 class ExamResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExamResult
-        fields = ['id', 'score', 'response_pattern']
+        fields = ['id', 'score', 'response_pattern', 'state']
 
 
 class CreateExamResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExamResult
-        fields = ['exam', 'score', 'choices', 'user', 'response_pattern']
+        fields = ['exam', 'score', 'choices', 'user', 'response_pattern', 'state']
 
 
 class CreateQuestionSerializer(serializers.ModelSerializer):

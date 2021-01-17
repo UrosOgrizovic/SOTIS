@@ -13,7 +13,8 @@ export const examService = {
     getXML,
     getPersonalizedQuestions,
     getExamGED,
-    submitQuestion
+    submitQuestion,
+    getStatesLikelihoods
 };
 
 function getAll() {
@@ -83,7 +84,6 @@ function submitQuestion(questionData) {
         headers: headers,
         body: JSON.stringify(questionData)
     };
-    console.log(questionData.answered_questions);
     let examId = questionData.answered_questions[0].exam.id;
     return fetch(`${config.apiUrl}/exams/${examId}/submitQuestion/`, requestOptions)
         .then(handleResponse)
@@ -194,7 +194,22 @@ function getExamGED(examId) {
     return fetch(`${config.apiUrl}/ged/${examId}/getByExamId`, requestOptions)
         .then(handleResponse)
         .then(result => {
-            console.log(result);
+            return result;
+        });
+}
+
+
+function getStatesLikelihoods(examId) {
+    const headers = authHeader();
+    headers['Content-Type'] = 'application/json';
+    const requestOptions = {
+        method: 'GET',
+        headers: headers
+    };
+
+    return fetch(`${config.apiUrl}/exams/${examId}/getStatesLikelihoods`, requestOptions)
+        .then(handleResponse)
+        .then(result => {
             return result;
         });
 }

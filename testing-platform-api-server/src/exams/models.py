@@ -47,6 +47,7 @@ class ExamResult(models.Model):
     exam = models.ForeignKey(Exam, on_delete=models.CASCADE, related_name='results', null=True)
     choices = models.ManyToManyField(Choice, related_name='results', blank=True)
     response_pattern = models.CharField(default="", max_length=255)
+    state = models.CharField(default="", max_length=255)
 
     def __str__(self):
         if self.user and self.exam:
