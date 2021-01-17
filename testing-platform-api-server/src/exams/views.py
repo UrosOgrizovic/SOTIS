@@ -8,14 +8,13 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.core.files import File
 from django.conf import settings
-from django.forms.models import model_to_dict
 
 from src.exams.models import Exam, Question, Choice, Domain, Problem, Subject, ProblemAttachment, ExamResult, \
     ActualProblemAttachment, DiffProblemAttachment, GraphEditDistance
 from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer, CreateExamResultSerializer, \
     DomainSerializer, SubjectSerializer, CreateExamSerializer, ProblemAttachmentSerializer, ProblemSerializer, \
     GraphEditDistanceSerializer
-from src.exams.helpers import is_cyclic, order_questions, find_problem_level, generate_knowledge_states,\
+from src.exams.helpers import is_cyclic, order_questions, generate_knowledge_states,\
     update_likelihoods_per_response_patterns, determine_next_question,\
     update_likelihoods_per_number_of_students_in_state
 from src.users.models import User
@@ -218,7 +217,8 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['post'], url_path='submitQuestion', url_name='submitQuestion', permission_classes=[IsStudentUser])
+    @action(detail=True, methods=['post'], url_path='submitQuestion', url_name='submitQuestion',
+            permission_classes=[IsStudentUser])
     def submit_question(self, request, pk):
         answered_questions = request.data['answered_questions']
         choices = request.data['choices']
@@ -227,7 +227,8 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         print(f"states_likelihoods before update {states_likelihoods}")
         next_question, states_likelihoods = determine_next_question(answered_questions,
                                                                     choices, pk, states_likelihoods)
-        return Response({"next_question": QuestionSerializer(next_question).data, "states_likelihoods": states_likelihoods}, status=status.HTTP_200_OK)
+        return Response({"next_question": QuestionSerializer(next_question).data, "states_likelihoods": states_likelihoods},
+                        status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['get'], url_path='getXML')
     def getXML(self, request, pk):
@@ -263,7 +264,7 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
         # 1. generate knowledge states
         state_matrix = generate_knowledge_states(all_problems, start_problem, state_matrix,
-                              len_problems, curr_lst)
+                                                 len_problems, curr_lst)
         num_states = len(state_matrix)
         states_likelihoods = {}
         for state in state_matrix:
@@ -279,8 +280,8 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
             response_patterns[res_pat] = response_patterns[res_pat] + 1 if res_pat in response_patterns else 1
         num_response_patterns = sum(response_patterns.values())
         # 3. response pattern-based update
-        states_likelihoods = update_likelihoods_per_response_patterns(state_matrix, response_patterns,\
-                                                                    num_response_patterns)
+        states_likelihoods = update_likelihoods_per_response_patterns(state_matrix, response_patterns,
+                                                                      num_response_patterns)
         print(f"states_likelihoods after update based on response patterns {states_likelihoods}")
         # 4. state frequency-based update
         states_likelihoods = update_likelihoods_per_number_of_students_in_state(states_likelihoods,

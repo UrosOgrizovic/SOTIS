@@ -1,5 +1,5 @@
 from src.exams.models import Exam, Problem, ProblemAttachment,\
-                             ActualProblemAttachment, ExamResult, Question
+    ActualProblemAttachment, Question
 from collections import OrderedDict
 import random
 
@@ -125,8 +125,8 @@ def guess_current_state(all_questions, answered_questions, choices):
                 a_q = question
                 break
         if a_q is not None:
-            actual_num_correct_answers = len([choice for choice in\
-                                            q.choices.all() if choice.correct_answer])
+            actual_num_correct_answers = len([choice for choice in
+                                              q.choices.all() if choice.correct_answer])
             to_add = "1"    # "1" if the question was answered correctly, "0" otherwise
             num_correct_answers = 0
             for c in a_q["choices"]:
@@ -208,7 +208,6 @@ def update_likelihoods_per_number_of_students_in_state(states_likelihoods, exam_
 def determine_next_question(answered_questions, choices, exam_id, states_likelihoods):
     answered_questions_ids = [a_q["id"] for a_q in answered_questions]
     exam = Exam.objects.get(id=exam_id)
-    exam_results = ExamResult.objects.filter(exam=exam_id)
     all_questions = list(exam.questions.all())
     # don't repeat questions
     next_q_candidates = Question.objects.filter(exam=exam).exclude(id__in=answered_questions_ids)
@@ -245,5 +244,5 @@ def determine_next_question(answered_questions, choices, exam_id, states_likelih
     chosen = next(iter(states_likelihoods))     # get state w/ highest likelihood
     for i in range(len(chosen)):
         if chosen[i] == "1" and current_state[i] == "0" and all_questions[i] in next_q_candidates:
-                print(f"i2 {i} Next question {all_questions[i]}")
-                return all_questions[i], states_likelihoods
+            print(f"i2 {i} Next question {all_questions[i]}")
+            return all_questions[i], states_likelihoods
