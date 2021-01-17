@@ -28,6 +28,10 @@
                         <el-button v-if="belongsToGroup('Teacher')" @click="openStudentList(scope.$index)" type="text" size="small">See student list</el-button>
                         <el-button v-if="belongsToGroup('Student')" @click="chooseExam(scope.$index)" type="text" size="small">Choose</el-button>
                         <el-button v-if="belongsToGroup('Teacher')" @click="downloadXML(scope.$index)" type="text" size="small">Download XML</el-button>
+                        <el-select v-if="belongsToGroup('Teacher')" @change="changeMode(scope.$index)" v-model="scope.row.mode" placeholder="Select Exam Mode">
+                            <el-option value="expected">Expected</el-option>
+                            <el-option value="real">Real</el-option>
+                        </el-select>
                     </template>
                 </el-table-column>
             </el-table>
@@ -76,7 +80,8 @@
                     <h3>Expected Knowledge Space</h3>
                     <graph @add-link="connectProblems"
                            :is-edit-mode="true"
-                           :nodes="currentDomain.problems || []" 
+                           :nodes="currentDomain.problems || []"
+                           :bidirection-disable="false"
                            :is-new-link="isDomainNewLink"
                            :name="'expected-ks'"
                            :next-nodes-field="'target_problems'"/>
@@ -85,6 +90,7 @@
                     <h3>Actual Knowledge Space</h3>
                     <graph :is-edit-mode="false"
                            :nodes="currentDomain.problems || []" 
+                           :bidirection-disable="false"
                            :name="'actual-ks'"
                            :is-new-link="isDomainNewLink"
                            :next-nodes-field="'actual_target_problems'"/>
@@ -95,6 +101,7 @@
                     <graph :is-edit-mode="false"
                            :nodes="currentDomain.problems || []" 
                            :name="'diff-ks'"
+                           :bidirection-disable="false"
                            :is-new-link="isDomainNewLink"
                            :next-nodes-field="'diff_target_problems'"/>
                 </div>
@@ -123,7 +130,7 @@ export default {
             problemForm: {
                 question_text: '',
                 exam: null,
-                choices: []
+                choices: [],
             },
             choiceForm: {
                 choice_text: '',
@@ -152,7 +159,7 @@ export default {
         ...mapGetters({domainGED: 'domains/getDomainGED'}),
     },
     methods: {
-        ...mapActions('exams', ['fetchPersonalizedExams', 'fetchAllExams', 'deleteExam', 'fetchXML', 'compareKnowledgeSpaces']),
+        ...mapActions('exams', ['fetchPersonalizedExams', 'fetchAllExams', 'deleteExam', 'fetchXML', 'compareKnowledgeSpaces', 'updateExam']),
         ...mapActions('account', ['fetchUserObject']),
         ...mapActions('domains', ['fetchDomain', 'createLink', 'createNode', 'fetchDomainGED']),
         chooseExam(index) {
@@ -170,6 +177,10 @@ export default {
             }
             const chosenExam = this.exams[index]
             this.$router.push({name: 'exam_takers_list', params: {'exam_id': chosenExam.id}})
+        },
+        changeMode(index) {
+            const chosenExam = this.exams[index];
+            this.updateExam({id: chosenExam.id, mode: chosenExam.mode})
         },
         downloadXML(index) {
             if (!this.exams.length) {

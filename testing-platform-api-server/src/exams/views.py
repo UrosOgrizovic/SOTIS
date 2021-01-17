@@ -14,9 +14,9 @@ from src.exams.models import Exam, Question, Choice, Domain, Problem, Subject, P
 from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSerializer, CreateExamResultSerializer, \
     DomainSerializer, SubjectSerializer, CreateExamSerializer, ProblemAttachmentSerializer, ProblemSerializer, \
     GraphEditDistanceSerializer
-from src.exams.helpers import is_cyclic, order_questions, generate_knowledge_states,\
+from src.exams.helpers import is_cyclic, generate_knowledge_states,\
     update_likelihoods_per_response_patterns, determine_next_question,\
-    update_likelihoods_per_number_of_students_in_state
+    update_likelihoods_per_number_of_students_in_state, order_questions_actual, order_questions_expected
 from src.users.models import User
 from src.users.serializers import UserSerializer
 from src.users.permissions import IsTeacherUser, IsStudentUser
@@ -230,6 +230,9 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         return Response({"next_question": QuestionSerializer(next_question).data, "states_likelihoods": states_likelihoods},
                         status=status.HTTP_200_OK)
 
+        determine_next_question(answered_questions, choices, pk)
+        return Response({'a': ''}, status=status.HTTP_200_OK)
+
     @action(detail=True, methods=['get'], url_path='getXML')
     def getXML(self, request, pk):
         '''
@@ -243,7 +246,8 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
     def get_personalized_questions_order(self, request, pk):
         questions = self.get_object().questions.all()
 
-        questions = sorted(questions, key=order_questions)
+        key = order_questions_actual if self.get_object().mode == 'actual' else order_questions_expected
+        questions = sorted(questions, key=key)
         return Response(QuestionSerializer(questions, many=True).data)
 
     @action(detail=True, methods=['get'], url_path='getStatesLikelihoods', url_name='getStatesLikelihoods')

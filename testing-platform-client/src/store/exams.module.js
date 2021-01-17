@@ -86,6 +86,9 @@ const actions = {
         examService.getStatesLikelihoods(examId).then(result => {
             commit('setStatesLikelihoods', result);
         })
+    },
+    updateExam(_, data) {
+        examService.updateExam(data);
     }
 };
 

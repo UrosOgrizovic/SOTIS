@@ -4,15 +4,26 @@ from collections import OrderedDict
 import random
 
 
-def find_problem_level(problem, level):
+def find_problem_level_actual(problem, level):
+    if not problem.actual_source_problems.first():
+        return level
+
+    return find_problem_level_actual(problem.actual_source_problems.first().source, level + 1)
+
+
+def order_questions_actual(question):
+    return find_problem_level_actual(question.problem, 0)
+
+
+def find_problem_level_expected(problem, level):
     if not problem.source_problems.first():
         return level
 
-    return find_problem_level(problem.source_problems.first().source, level + 1)
+    return find_problem_level_expected(problem.source_problems.first().source, level + 1)
 
 
-def order_questions(question):
-    return find_problem_level(question.problem, 0)
+def order_questions_expected(question):
+    return find_problem_level_expected(question.problem, 0)
 
 
 def is_cyclic_check(node, visited, recursion_stack, nodes, index):

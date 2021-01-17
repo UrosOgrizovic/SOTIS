@@ -38,7 +38,8 @@ export default {
                 canvas: false,
                 linkWidth:2
             },
-            newLink: {source: null, target: null}
+            newLink: {source: null, target: null},
+            exchangePairs: {}
         }
     },
     props: {
@@ -59,10 +60,15 @@ export default {
             type: String,
             required: false,
             default: ''
+        },
+        bidirectionDisable: {
+            type: Boolean,
+            required: false,
+            default: false
         }
     },
     computed: {
-        format() {
+        formatWithBidirection() {
             let nodes = [];
             let links = [];
             
@@ -74,9 +80,71 @@ export default {
                 nodes,
                 links
             }
+        },
+        formatWithoutBidirection() {
+            if (!this.nodes) {
+                return {};
+            }
+            let resultNodes = [];
+            let resultLinks = [];
+
+            let currentLinks = {}
+            let nodes = this.nodes
+            do {
+                resultNodes = [];
+                resultLinks = [];
+                nodes.forEach(node => {
+                    node[this.nextNodesField].forEach(nextAttachment => {
+                        const sid = this.exchangePairs[node.id] || node.id
+                        const tid = this.exchangePairs[nextAttachment.target] || nextAttachment.target
+                        if (currentLinks[tid] && currentLinks[tid].includes(sid)) {
+                            this.exchangePairs[sid] = tid
+                        } else {
+                            currentLinks[sid] = currentLinks[sid] ? [...currentLinks[sid], tid] : [tid]
+                        }
+                    })
+                })
+                
+                nodes.forEach(node => {
+                    if (this.exchangePairs[node.id]) {
+                        return;
+                    }
+                    if (!this.exchangePairs[node.id]) {
+                        resultNodes.push({id: node.id, name: `${node.id}-node`})
+                    }
+                    node[this.nextNodesField].forEach(nextAttachment => {
+                        const sid = this.exchangePairs[node.id] || node.id
+                        const tid = this.exchangePairs[nextAttachment.target] || nextAttachment.target
+                        if (sid == tid) {
+                            return;
+                        }
+                        resultLinks.push({sid, tid});
+                    })
+                });
+                nodes = this.nodes.filter(node => {return !Object.keys(this.exchangePairs).map(id => parseInt(id)).includes(node.id)})
+            } while(this.checkBidirection(resultLinks));
+
+            return {
+                nodes: resultNodes,
+                links: resultLinks
+            }
+        },
+        format() {
+            return this.bidirectionDisable ? this.formatWithoutBidirection : this.formatWithBidirection
         }
     },
     methods: {
+        checkBidirection(links) {
+            let bidirectionExists = false;
+            links.forEach(link => {
+                links.forEach(otherLink => {
+                    if (link.sid == otherLink.tid && link.tid == otherLink.sid) {
+                        bidirectionExists = true;
+                    }
+                })
+            })
+            return bidirectionExists;
+        },
         lcb (link) {
             link._svgAttrs = { 'marker-end': 'url(#m-end)',
                             'marker-start': 'url(#m-start)'}
