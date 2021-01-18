@@ -266,9 +266,14 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         curr_lst = ["0" for i in range(len_problems)]
         curr_lst[0] = "1"
 
+        print(f"Exam mode {exam.mode}")
+        is_actual = True
+        if exam.mode == 'expected':
+            is_actual = False
+
         # 1. generate knowledge states
         state_matrix = generate_knowledge_states(all_problems, start_problem, state_matrix,
-                                                 len_problems, curr_lst)
+                                                 len_problems, curr_lst, set(), is_actual)
         num_states = len(state_matrix)
         states_likelihoods = {}
         for state in state_matrix:
