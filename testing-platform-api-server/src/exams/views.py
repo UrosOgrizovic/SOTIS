@@ -305,6 +305,30 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         questions.sort(key=lambda el: el.num_correct_answers)
         return Response(QuestionSerializer(questions[-1]).data)
 
+    @action(detail=True, methods=['get'], url_path='getCurrentKnowledgeState',
+            url_name='getCurrentKnowledgeState', permission_classes=[IsAuthenticated])
+    def get_current_knowledge_state(self, request, pk):
+        current_state = ExamResult.objects.filter(exam=self.get_object(), user=self.request.user).order_by('pk').values().last()
+        exam = Exam.objects.get(id=pk)
+        all_questions = list(exam.questions.all())
+        all_question_ids = [q.id for q in all_questions]
+        all_problems = list(Problem.objects.filter(question__in=all_question_ids))
+        len_problems = len(all_problems)
+        start_problem = all_problems[0]
+        state_matrix = []
+        state_matrix.append("1" + "0" * (len_problems - 1))
+        curr_lst = ["0" for i in range(len_problems)]
+        curr_lst[0] = "1"
+
+        print(f"Exam mode {exam.mode}")
+        is_actual = True
+        if exam.mode == 'expected':
+            is_actual = False
+
+        state_matrix = generate_knowledge_states(all_problems, start_problem, state_matrix,
+                                                 len_problems, curr_lst, set(), is_actual)
+        return Response({"current_state": current_state['state'], "states": state_matrix}, status=status.HTTP_200_OK)
+
 
 class SubjectViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin,
                      mixins.ListModelMixin, mixins.CreateModelMixin):

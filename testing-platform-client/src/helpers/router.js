@@ -10,6 +10,7 @@ import Exam from '@Components/exams/Exam'
 import ExamForm from '@Components/exams/ExamForm'
 import SubjectForm from '@Components/subjects/SubjectForm'
 import ExamTakersList from '@Components/exams/ExamTakersList'
+import States from '@Components/exams/States'
 
 import { teacherOnlyGuard } from '@Helpers/guards';
 
@@ -24,6 +25,7 @@ export const router = new Router({
     { path: '/exams/:exam_id', name: 'single_exam', component: Exam},
     { path: '/exams/:exam_id/students', name: 'exam_takers_list', component: ExamTakersList},
     { path: '/exams', component: Exams},
+    { path: '/states/:exam_id', name: 'states', component: States},
     { path: '/domains', component: Domains},
     { path: '/new-exam', component: ExamForm, beforeRouteEnter: teacherOnlyGuard},
     { path: '/new-subject', component: SubjectForm },

@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        <svg>
+        <svg style="width: 0px; height: 0px;">
             <defs>
                 <marker id="m-end" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth" >
                     <path d="M0,0 L0,6 L9,3 z"></path>
@@ -170,6 +170,7 @@ export default {
 <style scoped>
 .container {
     width: 400px;
+    border: 1px solid black;
 }
 #m-end path, #m-start{
   fill: rgba(18, 120, 98, 0.8);

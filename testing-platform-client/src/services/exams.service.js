@@ -15,7 +15,8 @@ export const examService = {
     getExamGED,
     submitQuestion,
     getStatesLikelihoods,
-    updateExam
+    updateExam,
+    fetchExamState
 };
 
 function getAll() {
@@ -118,6 +119,21 @@ function getPersonalizedExams(data) {
         .then(handleResponse)
         .then(exams => {
             return exams;
+        });
+}
+
+function fetchExamState(examId) {
+    const headers = authHeader();
+    headers['Content-Type'] = 'application/json';
+    const requestOptions = {
+        method: 'GET',
+        headers: headers
+    };
+
+    return fetch(`${config.apiUrl}/exams/${examId}/getCurrentKnowledgeState`, requestOptions)
+        .then(handleResponse)
+        .then(result => {
+            return result;
         });
 }
 

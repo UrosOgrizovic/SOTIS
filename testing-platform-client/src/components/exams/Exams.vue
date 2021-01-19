@@ -27,6 +27,7 @@
                         <el-button v-if="belongsToGroup('Teacher')" @click="openDeleteExamModal(scope.$index)" type="text" size="small">Remove</el-button>
                         <el-button v-if="belongsToGroup('Teacher')" @click="openStudentList(scope.$index)" type="text" size="small">See student list</el-button>
                         <el-button v-if="belongsToGroup('Student')" @click="chooseExam(scope.$index)" type="text" size="small">Choose</el-button>
+                        <el-button v-if="belongsToGroup('Student')" @click="openStudentState(scope.$index)" type="text" size="small">View State</el-button>
                         <el-button v-if="belongsToGroup('Teacher')" @click="downloadXML(scope.$index)" type="text" size="small">Download XML</el-button>
                         <el-select v-if="belongsToGroup('Teacher')" @change="changeMode(scope.$index)" v-model="scope.row.mode" placeholder="Select Exam Mode">
                             <el-option value="expected">Expected</el-option>
@@ -97,13 +98,13 @@
                 </div>
                 <div>
                     <h3>Compare Knowledge Spaces</h3>
-                    <h3>Graph edit distance = {{domainGED}}</h3>
                     <graph :is-edit-mode="false"
                            :nodes="currentDomain.problems || []" 
                            :name="'diff-ks'"
                            :bidirection-disable="false"
                            :is-new-link="isDomainNewLink"
                            :next-nodes-field="'diff_target_problems'"/>
+                    <h3>Graph edit distance = {{domainGED}}</h3>
                 </div>
                 
             </div>
@@ -178,6 +179,10 @@ export default {
             const chosenExam = this.exams[index]
             this.$router.push({name: 'exam_takers_list', params: {'exam_id': chosenExam.id}})
         },
+        openStudentState(index) {
+            const chosenExam = this.exams[index]
+            this.$router.push({name: 'states', params: {'exam_id': chosenExam.id}})
+        },
         changeMode(index) {
             const chosenExam = this.exams[index];
             this.updateExam({id: chosenExam.id, mode: chosenExam.mode})
@@ -245,3 +250,9 @@ export default {
     }
 }
 </script>
+
+<style scoped>
+h3 {
+    text-align: center;
+}
+</style>

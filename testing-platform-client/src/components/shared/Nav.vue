@@ -6,7 +6,7 @@
             <ul class="el-menu el-menu--horizontal navbar__menu">
                 <li class="el-menu-item"><router-link to="/">Home</router-link></li>
                 <li class="el-menu-item"><router-link to="/domains">View Domains</router-link></li>
-                <li class="el-menu-item"><router-link v-if="belongsToGroup('Teacher')" to="/exams">My Exams</router-link></li>
+                <li class="el-menu-item" v-if="belongsToGroup('Teacher')"><router-link  to="/exams">My Exams</router-link></li>
                 <li class="el-menu-item"><router-link to="/login">Logout</router-link></li>
             </ul>
         </el-col>
