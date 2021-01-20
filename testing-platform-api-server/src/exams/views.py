@@ -16,7 +16,8 @@ from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSeri
     GraphEditDistanceSerializer
 from src.exams.helpers import is_cyclic, generate_knowledge_states,\
     update_likelihoods_per_response_patterns, determine_next_question,\
-    update_likelihoods_per_number_of_students_in_state, order_questions_actual, order_questions_expected
+    update_likelihoods_per_number_of_students_in_state, order_questions_actual, order_questions_expected,\
+    update_likelihoods_for_current_state, guess_current_state
 from src.users.models import User
 from src.users.serializers import UserSerializer
 from src.users.permissions import IsTeacherUser, IsStudentUser
@@ -187,6 +188,13 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         correct_choices_ids = [c_c.id for c_c in correct_choices]
 
         states_likelihoods = request.data["states_likelihoods"]
+        exam = Exam.objects.get(id=request.data["id"])
+        all_questions = list(exam.questions.all())
+        answered_questions = request.data["answered_questions"]
+        current_state = guess_current_state(all_questions, answered_questions, choices_ids)
+        print(f"states_likelihoods before final update {states_likelihoods}")
+        states_likelihoods = update_likelihoods_for_current_state(states_likelihoods, current_state)
+        print(f"states_likelihoods after final update {states_likelihoods}")
         # select state with highest likelihood
         current_state = max(states_likelihoods, key=lambda key: states_likelihoods[key])
         response_pattern = []
@@ -229,9 +237,6 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                                                                     choices, pk, states_likelihoods)
         return Response({"next_question": QuestionSerializer(next_question).data, "states_likelihoods": states_likelihoods},
                         status=status.HTTP_200_OK)
-
-        determine_next_question(answered_questions, choices, pk)
-        return Response({'a': ''}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['get'], url_path='getXML')
     def getXML(self, request, pk):

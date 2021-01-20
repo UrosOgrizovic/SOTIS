@@ -120,8 +120,9 @@ def guess_current_state(all_questions, answered_questions, choices):
     """Guess current state by checking which questions were answered correctly
 
     Args:
-        answered_questions (list): list of all questions
+        all_questions (list): list of all questions
         answered_questions (list): list of objects/answered questions
+        choices (list): list of choices
 
     Returns:
         string: the guessed current state
@@ -191,17 +192,19 @@ def update_likelihoods_for_current_state(states_likelihoods, current_state):
     num_answered = current_state.count("1")
     # compare states_likelihoods with current_state
     for state, likelihood in states_likelihoods.items():
+        state_num_answered = state.count("1")
         # severely decrease chance of landing in state with 2+ question diff
-        if state.count("1") > num_answered + 1:
-            states_likelihoods[state] *= 0.7
+        if state_num_answered > num_answered + 1 or state_num_answered < num_answered:
+            states_likelihoods[state] *= 0.6
+            continue
 
         for i in range(len(current_state)):
             if current_state[i] == state[i]:
-                states_likelihoods[state] *= 1.1
+                states_likelihoods[state] *= 1.2
             else:
-                states_likelihoods[state] *= 0.9
+                states_likelihoods[state] *= 0.8
     # only keep states with a likelihood greater than 0
-    states_likelihoods = {k: round(v, 2) for k, v in states_likelihoods.items() if v > 0}
+    states_likelihoods = {k: round(v, 2) for k, v in states_likelihoods.items()}
     return states_likelihoods
 
 

@@ -69,15 +69,16 @@ export default {
             }
             // each question can only appear once in answeredQuestions
             this.answeredQuestions[this.currentQuestion.id] = this.currentQuestion;
+            // pass list instead of object, so this is just reformatting
+            let answeredQuestions = [];
+            for (let key in this.answeredQuestions) {
+                answeredQuestions.push(this.answeredQuestions[key]);
+            }
             if (Object.keys(this.answeredQuestions).length == this.personalizedQuestions.length) {
-                this.submitExam({"id": examId, "choices": this.form.choices, "states_likelihoods": this.statesLikelihoods});
+                this.submitExam({"id": examId, "choices": this.form.choices, "states_likelihoods": this.statesLikelihoods,
+                                 "answered_questions": answeredQuestions});
                 this.show = true;
             } else {
-                // pass list instead of object, so this is just reformatting
-                let answeredQuestions = [];
-                for (let key in this.answeredQuestions) {
-                    answeredQuestions.push(this.answeredQuestions[key]);
-                }
                 this.submitQuestion({"answered_questions": answeredQuestions, "choices": this.form.choices,
                                      "states_likelihoods": this.statesLikelihoods});
                 this.currentQuestionIndex = this.answeredQuestions.length;
