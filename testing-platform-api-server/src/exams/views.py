@@ -17,7 +17,7 @@ from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSeri
 from src.exams.helpers import is_cyclic, generate_knowledge_states,\
     update_likelihoods_per_response_patterns, determine_next_question,\
     update_likelihoods_per_number_of_students_in_state, order_questions_actual, order_questions_expected,\
-    update_likelihoods_for_current_state, guess_current_state
+    update_likelihoods_for_current_state, guess_current_state, update_likelihoods_markov
 from src.users.models import User
 from src.users.serializers import UserSerializer
 from src.users.permissions import IsTeacherUser, IsStudentUser
@@ -191,6 +191,8 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         exam = Exam.objects.get(id=request.data["id"])
         all_questions = list(exam.questions.all())
         answered_questions = request.data["answered_questions"]
+        # sorting necessary so that current state and response pattern are correct
+        answered_questions.sort(key=lambda q: q['id'])
         current_state = guess_current_state(all_questions, answered_questions, choices_ids)
         print(f"states_likelihoods before final update {states_likelihoods}")
         states_likelihoods = update_likelihoods_for_current_state(states_likelihoods, current_state)
@@ -228,14 +230,29 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
     @action(detail=True, methods=['post'], url_path='submitQuestion', url_name='submitQuestion',
             permission_classes=[IsStudentUser])
     def submit_question(self, request, pk):
+        exam = Exam.objects.get(id=request.data["id"])
+        all_questions = list(exam.questions.all())
+        all_questions_ids = [q.id for q in all_questions]
         answered_questions = request.data['answered_questions']
+        question_idx = all_questions_ids.index(answered_questions[-1]["id"])
+        # sorting necessary so that current state and response pattern are correct
+        answered_questions.sort(key=lambda q: q['id'])
         choices = request.data['choices']
         states_likelihoods = request.data['states_likelihoods']
         print(f"Choices ids {choices}")
         print(f"states_likelihoods before update {states_likelihoods}")
-        next_question, states_likelihoods = determine_next_question(answered_questions,
+        latest_answer_correct = Choice.objects.get(id=choices[-1]).correct_answer
+        r = 1 if latest_answer_correct else 0
+        ret_val = update_likelihoods_markov(question_idx, states_likelihoods, r)
+        terminate_test = False
+        if ret_val == 'terminate test':
+            terminate_test = True
+        else:
+            states_likelihoods = ret_val
+        next_question, _ = determine_next_question(answered_questions,
                                                                     choices, pk, states_likelihoods)
-        return Response({"next_question": QuestionSerializer(next_question).data, "states_likelihoods": states_likelihoods},
+        return Response({"next_question": QuestionSerializer(next_question).data, "states_likelihoods": states_likelihoods,
+                         "terminate_test": terminate_test},
                         status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['get'], url_path='getXML')
@@ -262,11 +279,12 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         """
         exam = Exam.objects.get(id=pk)
         all_questions = list(exam.questions.all())
-        all_question_ids = [q.id for q in all_questions]
-        all_problems = list(Problem.objects.filter(question__in=all_question_ids))
+        all_questions_ids = [q.id for q in all_questions]
+        all_problems = list(Problem.objects.filter(question__in=all_questions_ids))
         len_problems = len(all_problems)
         start_problem = all_problems[0]
         state_matrix = []
+        state_matrix.append("0" * len_problems)
         state_matrix.append("1" + "0" * (len_problems - 1))
         curr_lst = ["0" for i in range(len_problems)]
         curr_lst[0] = "1"
@@ -293,14 +311,14 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
             res_pat = e_r.response_pattern
             response_patterns[res_pat] = response_patterns[res_pat] + 1 if res_pat in response_patterns else 1
         num_response_patterns = sum(response_patterns.values())
-        # 3. response pattern-based update
-        states_likelihoods = update_likelihoods_per_response_patterns(state_matrix, response_patterns,
-                                                                      num_response_patterns)
-        print(f"states_likelihoods after update based on response patterns {states_likelihoods}")
-        # 4. state frequency-based update
-        states_likelihoods = update_likelihoods_per_number_of_students_in_state(states_likelihoods,
-                                                                                exam_results)
-        print(f"states_likelihoods after update based on number of students per state {states_likelihoods}")
+        # # 3. response pattern-based update
+        # states_likelihoods = update_likelihoods_per_response_patterns(state_matrix, response_patterns,
+        #                                                               num_response_patterns)
+        # print(f"states_likelihoods after update based on response patterns {states_likelihoods}")
+        # # 4. state frequency-based update
+        # states_likelihoods = update_likelihoods_per_number_of_students_in_state(states_likelihoods,
+        #                                                                         exam_results)
+        # print(f"states_likelihoods after update based on number of students per state {states_likelihoods}")
         return Response(states_likelihoods, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['get'], url_path='getEasiestQuestion', url_name='getEasiestQuestion')
@@ -316,11 +334,12 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         current_state = ExamResult.objects.filter(exam=self.get_object(), user=self.request.user).order_by('pk').values().last()
         exam = Exam.objects.get(id=pk)
         all_questions = list(exam.questions.all())
-        all_question_ids = [q.id for q in all_questions]
-        all_problems = list(Problem.objects.filter(question__in=all_question_ids))
+        all_questions_ids = [q.id for q in all_questions]
+        all_problems = list(Problem.objects.filter(question__in=all_questions_ids))
         len_problems = len(all_problems)
         start_problem = all_problems[0]
         state_matrix = []
+        state_matrix.append("0" * len_problems)
         state_matrix.append("1" + "0" * (len_problems - 1))
         curr_lst = ["0" for i in range(len_problems)]
         curr_lst[0] = "1"

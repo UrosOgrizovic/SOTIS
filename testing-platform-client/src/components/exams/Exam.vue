@@ -36,7 +36,8 @@ export default {
             },
             show: false,
             currentQuestionIndex: 0,
-            answeredQuestions: {}
+            // answeredQuestions: {}
+            answeredQuestions: []
         }
     },
     computed: {
@@ -44,7 +45,8 @@ export default {
             examResult: 'exams/getExamResult',
             personalizedQuestions: 'exams/getPersonalizedQuestions',
             nextQuestion: 'exams/getNextQuestion',
-            statesLikelihoods: 'exams/getStatesLikelihoods'
+            statesLikelihoods: 'exams/getStatesLikelihoods',
+            terminateTest: 'exams/getTerminateTest'
         }),
         exam() {
             return this.$store.getters['exams/getExam'](this.exam_id)
@@ -68,19 +70,29 @@ export default {
                 }
             }
             // each question can only appear once in answeredQuestions
-            this.answeredQuestions[this.currentQuestion.id] = this.currentQuestion;
-            // pass list instead of object, so this is just reformatting
-            let answeredQuestions = [];
-            for (let key in this.answeredQuestions) {
-                answeredQuestions.push(this.answeredQuestions[key]);
-            }
+            // this.answeredQuestions[this.currentQuestion.id] = this.currentQuestion;
+            // // pass list instead of object, so this is just reformatting
+            // let answeredQuestions = [];
+            // for (let key in this.answeredQuestions) {
+            //     answeredQuestions.push(this.answeredQuestions[key]);
+            // }
+            this.answeredQuestions.push(this.currentQuestion);
             if (Object.keys(this.answeredQuestions).length == this.personalizedQuestions.length) {
                 this.submitExam({"id": examId, "choices": this.form.choices, "states_likelihoods": this.statesLikelihoods,
-                                 "answered_questions": answeredQuestions});
+                                 "answered_questions": this.answeredQuestions});
                 this.show = true;
             } else {
-                this.submitQuestion({"answered_questions": answeredQuestions, "choices": this.form.choices,
+                this.submitQuestion({"id": examId, "answered_questions": this.answeredQuestions, "choices": this.form.choices,
                                      "states_likelihoods": this.statesLikelihoods});
+                let that = this;
+                setTimeout(function(){ if (this.terminateTest) {
+                        alert("Too many errors - test over")
+                        // that.$router.push({name: 'domains'})
+                        that.$router.push({name: 'domains'})
+
+                        // window.location.href = "/domains";
+                    }
+                }, 100);
                 this.currentQuestionIndex = this.answeredQuestions.length;
             }
 

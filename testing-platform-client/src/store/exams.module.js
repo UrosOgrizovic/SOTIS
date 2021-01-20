@@ -16,7 +16,8 @@ const state = {
     personalizedQuestions: [],
     examGED: 0,
     nextQuestion: {},
-    statesLikelihoods: {}
+    statesLikelihoods: {},
+    terminateTest: false
 };
 
 const actions = {
@@ -81,7 +82,7 @@ const actions = {
     },
     submitQuestion({commit}, data) {
         examService.submitQuestion(data).then(result => {
-            commit('setNextQuestionAndStatesLikelihoods', result);
+            commit('setNextQStatesLTerminateT', result);
         })
     },
     fetchStatesLikelihoods({commit}, examId) {
@@ -138,9 +139,10 @@ const mutations = {
     setExamStates(state, examStates) {
         state.examStates = examStates;
     },
-    setNextQuestionAndStatesLikelihoods(state, result) {
+    setNextQStatesLTerminateT(state, result) {
         state.nextQuestion = result["next_question"];
         state.statesLikelihoods = result["states_likelihoods"];
+        self.terminateTest = result["terminate_test"];
     },
     setStatesLikelihoods(state, statesLikelihoods) {
         state.statesLikelihoods = statesLikelihoods;
@@ -191,6 +193,9 @@ const getters = {
     },
     getStatesLikelihoods(state) {
         return state.statesLikelihoods;
+    },
+    getTerminateTest(state) {
+        return state.terminateTest;
     }
 };
 

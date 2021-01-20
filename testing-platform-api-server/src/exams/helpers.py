@@ -231,16 +231,22 @@ def determine_next_question(answered_questions, choices, exam_id, states_likelih
     all_problem_ids = [p.id for p in all_problems]
     print(f"Problem ids for this exam: {all_problem_ids}")
 
-    # do Markov
-    current_state = guess_current_state(all_questions, answered_questions, choices)
-    print(f"Guessed current state {current_state}")
-    states_likelihoods = update_likelihoods_for_current_state(states_likelihoods, current_state)
+    # current_state = guess_current_state(all_questions, answered_questions, choices)
+    # states_likelihoods = update_likelihoods_for_current_state(states_likelihoods, current_state)
     states_likelihoods = OrderedDict(sorted(states_likelihoods.items(),
                                      key=lambda t: t[1], reverse=True))
-    print(f"states_likelihoods after update based on current state {states_likelihoods}")
-
-    for state, likelihood in states_likelihoods.items():
-        # small chance of a lucky guess, copying or an accidental mistake
+    current_state = next(iter(states_likelihoods))
+    print(f"Current state {current_state}")
+    distances = []
+    for state in states_likelihoods:
+        # no going back
+        if state.count("1") >= current_state.count("1"):
+            dist = levenshteinDistance(current_state, state)
+        if dist > 0:
+            distances.append((dist, state))
+    distances.sort(key=lambda tup: tup[0])
+    next_state = ""
+    for _, state in distances:
         if random.random() < 0.1:
             print("Random has prevailed")
             continue
@@ -254,9 +260,69 @@ def determine_next_question(answered_questions, choices, exam_id, states_likelih
                     print(f"i1 {i} Next question {all_questions[i]}")
                     return all_questions[i], states_likelihoods
 
-    # swords are of no use here, for random is too powerful...
-    chosen = next(iter(states_likelihoods))     # get state w/ highest likelihood
-    for i in range(len(chosen)):
-        if chosen[i] == "1" and current_state[i] == "0" and all_questions[i] in next_q_candidates:
-            print(f"i2 {i} Next question {all_questions[i]}")
-            return all_questions[i], states_likelihoods
+
+def update_likelihoods_markov(question_idx, states_likelihoods, r):
+    """
+    q - question
+    n - trial number
+    u - updating rule
+    r in {0, 1} - response (correct or incorrect)
+    theta_{q, r} in (0, 1)
+    K - knowledge state
+    k_{q} - all knowledge states that contain q
+    k_{q_complement} - all knowledge states that don't contain q
+    L_{n, K} - likelihood that the examinee is in state K on trial n
+    g_{K}(r, q, L_{n}) = r * L_{n, K}/L_{n, K_{q}} if K in k_{q},
+                         (1 - r) * L_{n, K}/L_{n, K_{q_complement}} if K in k_{q_complement}
+    u_{K}(r, q, L_{n}) = (1 - theta_{q,r})L_{n,K} + theta_{q,r} * g_{K}(r, q, L_{n})
+    """
+    # stopping criterion
+    max_likelihood = max(states_likelihoods.values())
+    if max_likelihood > 0.6:
+        return 'terminate test'
+    theta = 0.5
+    L_q, L_q_complement = 0, 0
+    for state, likelihood in states_likelihoods.items():
+        if state[question_idx] == str(r):
+            L_q += 1
+        else:
+            L_q_complement += 1
+    L_q = round(L_q / len(states_likelihoods), 2)
+    L_q_complement = round(L_q_complement / len(states_likelihoods), 2)
+    print(f"L_q {L_q} L_q_c {L_q_complement} r {r} question_idx {question_idx}")
+
+    for state, likelihood in states_likelihoods.items():
+        likelihood = round(likelihood, 2)
+        val = g(question_idx, state, r, likelihood, L_q, L_q_complement)
+        u = round((1 - theta) * likelihood + theta * val, 2)
+        # print(f"u {u} val {val} state {state} likelihood {likelihood}")
+        states_likelihoods[state] = u
+    print(f"states_likelihoods after Markov update {states_likelihoods}")
+    return states_likelihoods
+
+
+def g(question_idx, K, r, L_K, L_q, L_q_complement):
+    val = 0
+    if K[question_idx] == str(r):  # K in k_{q}
+        # r * L_{n, K}/L_{n, K_{q}}
+        val = L_K / L_q
+    else:   # K in k_{q_complement}
+        # (1 - r) * L_{n, K}/L_{n, K_{q_complement}}
+        val = (1-r) * L_K / L_q_complement
+    return round(val, 2)
+
+
+def levenshteinDistance(s1, s2):
+    if len(s1) > len(s2):
+        s1, s2 = s2, s1
+
+    distances = range(len(s1) + 1)
+    for i2, c2 in enumerate(s2):
+        distances_ = [i2+1]
+        for i1, c1 in enumerate(s1):
+            if c1 == c2:
+                distances_.append(distances[i1])
+            else:
+                distances_.append(1 + min((distances[i1], distances[i1 + 1], distances_[-1])))
+        distances = distances_
+    return distances[-1]
