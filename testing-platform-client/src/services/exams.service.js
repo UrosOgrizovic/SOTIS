@@ -133,6 +133,7 @@ function fetchExamState(examId) {
     return fetch(`${config.apiUrl}/exams/${examId}/getCurrentKnowledgeState`, requestOptions)
         .then(handleResponse)
         .then(result => {
+            console.log(result);
             return result;
         });
 }
