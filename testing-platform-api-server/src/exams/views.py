@@ -206,16 +206,16 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
             states_likelihoods = ret_val
         # select state with highest likelihood
         current_state = max(states_likelihoods, key=lambda key: states_likelihoods[key])
-        response_pattern = []
-        for id in choices_ids:
-            if id in correct_choices_ids:
-                response_pattern.append("1")
-            else:
-                response_pattern.append("0")
+        response_pattern = ["0" for _ in range(len(all_questions))]
+        chces = sorted(choices_ids)
+        for i in range(len(answered_questions)):
+            for chc in answered_questions[i]["choices"]:
+                if chc["id"] in choices_ids and chc["id"] in correct_choices_ids:
+                    response_pattern[i] = "1"
         response_pattern = "".join(response_pattern)
         print(f"Response pattern {response_pattern}")
         score = correct_choices.count()
-        print(f"Score {score}/{len(choices_ids)}")
+        print(f"Score {score}/{len(answered_questions)}")
         serializer = self.get_serializer(data={
             'exam': self.get_object().id,
             'user': request.user.id,
