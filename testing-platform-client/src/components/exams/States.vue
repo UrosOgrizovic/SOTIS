@@ -50,7 +50,14 @@ export default {
             this.states.forEach(state => {
                 const _color = state.code == this.currentState ? 'red' : 'green';
                 nodes.push({name: state.code, id: state.code, _color})
+                if (!state.edges) {
+                    return;
+                }
                 state.edges.forEach(nextState => {
+                    const linkExists = links.find((link) => { return link.sid == nextState && link.tid == state.code})
+                    if (linkExists) {
+                        return;
+                    }
                     links.push({sid: state.code, tid: nextState})
                 })
             })

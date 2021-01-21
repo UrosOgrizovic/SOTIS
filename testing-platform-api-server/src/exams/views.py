@@ -355,6 +355,10 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         def map_state_matrix_edges(element):
             def get_edges(el):
                 edges = set()
+                if '1' not in el:
+                    state_matrix_without_zeros = [state for state in state_matrix if '1' in state]
+                    min_ones = min(state_matrix_without_zeros, key=lambda x: x.count('1'))
+                    return filter(lambda x: x.count('1') == min_ones.count('1'), state_matrix)
                 for state in state_matrix:
                     if state == el:
                         continue
@@ -371,15 +375,16 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                             if not is_actual and ProblemAttachment.objects.filter(source=all_problems[sid].id,
                                                                                   target=all_problems[tid].id).exists():
                                 edges.add(state)
+                return edges
 
             return {
                 'code': element,
                 'edges': get_edges(element)
             }
 
-        state_matrix = map(map_state_matrix_edges, state_matrix)
+        new_state_matrix = map(map_state_matrix_edges, state_matrix)
 
-        return Response({"current_state": current_state['state'], "states": state_matrix}, status=status.HTTP_200_OK)
+        return Response({"current_state": current_state['state'], "states": new_state_matrix}, status=status.HTTP_200_OK)
 
 
 class SubjectViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin,
