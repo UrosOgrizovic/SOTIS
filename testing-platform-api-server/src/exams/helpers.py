@@ -245,7 +245,6 @@ def determine_next_question(answered_questions, choices, exam_id, states_likelih
         if dist > 0:
             distances.append((dist, state))
     distances.sort(key=lambda tup: tup[0])
-    next_state = ""
     for _, state in distances:
         if random.random() < 0.1:
             print("Random has prevailed")

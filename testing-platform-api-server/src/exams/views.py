@@ -15,8 +15,8 @@ from src.exams.serializers import ExamSerializer, QuestionSerializer, ChoiceSeri
     DomainSerializer, SubjectSerializer, CreateExamSerializer, ProblemAttachmentSerializer, ProblemSerializer, \
     GraphEditDistanceSerializer
 from src.exams.helpers import is_cyclic, generate_knowledge_states,\
-    update_likelihoods_per_response_patterns, determine_next_question,\
-    update_likelihoods_per_number_of_students_in_state, order_questions_actual, order_questions_expected,\
+    determine_next_question, \
+    order_questions_actual, order_questions_expected,\
     update_likelihoods_for_current_state, guess_current_state, update_likelihoods_markov
 from src.users.models import User
 from src.users.serializers import UserSerializer
@@ -250,7 +250,7 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         else:
             states_likelihoods = ret_val
         next_question, _ = determine_next_question(answered_questions,
-                                                                    choices, pk, states_likelihoods)
+                                                   choices, pk, states_likelihoods)
         return Response({"next_question": QuestionSerializer(next_question).data, "states_likelihoods": states_likelihoods,
                          "terminate_test": terminate_test},
                         status=status.HTTP_200_OK)
@@ -310,7 +310,7 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
         for e_r in exam_results:
             res_pat = e_r.response_pattern
             response_patterns[res_pat] = response_patterns[res_pat] + 1 if res_pat in response_patterns else 1
-        num_response_patterns = sum(response_patterns.values())
+        # num_response_patterns = sum(response_patterns.values())
         # # 3. response pattern-based update
         # states_likelihoods = update_likelihoods_per_response_patterns(state_matrix, response_patterns,
         #                                                               num_response_patterns)
@@ -351,6 +351,34 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
         state_matrix = generate_knowledge_states(all_problems, start_problem, state_matrix,
                                                  len_problems, curr_lst, set(), is_actual)
+
+        def map_state_matrix_edges(element):
+            def get_edges(el):
+                edges = set()
+                for state in state_matrix:
+                    if state == el:
+                        continue
+                    for tid, tar_problem in enumerate(state):
+                        if tar_problem != '1':
+                            continue
+
+                        for sid, src_problem in enumerate(el):
+                            if src_problem != '1':
+                                continue
+                            if is_actual and ActualProblemAttachment.objects.filter(source=all_problems[sid].id,
+                                                                                    target=all_problems[tid].id).exists():
+                                edges.add(state)
+                            if not is_actual and ProblemAttachment.objects.filter(source=all_problems[sid].id,
+                                                                                  target=all_problems[tid].id).exists():
+                                edges.add(state)
+
+            return {
+                'code': element,
+                'edges': get_edges(element)
+            }
+
+        state_matrix = map(map_state_matrix_edges, state_matrix)
+
         return Response({"current_state": current_state['state'], "states": state_matrix}, status=status.HTTP_200_OK)
 
 

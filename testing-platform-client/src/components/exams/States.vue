@@ -1,8 +1,19 @@
 <template>
     <div>
+        <svg style="width: 0px; height: 0px;">
+            <defs>
+                <marker id="m-end" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth" >
+                    <path d="M0,0 L0,6 L9,3 z"></path>
+                </marker>
+                <marker id="m-start" markerWidth="6" markerHeight="6" refX="-4" refY="3" orient="auto" markerUnits="strokeWidth" >
+                    <rect width="3" height="6"></rect>
+                </marker>
+            </defs>
+        </svg>
         <d3-network :ref='`net-states`' 
-                    :net-nodes="nodes" 
-                    :net-links="[]"
+                    :net-nodes="format.nodes"
+                    :net-links="format.links"
+                    :link-cb="lcb"
                     :options="options"/>
     </div>
 </template> 
@@ -20,7 +31,7 @@ export default {
         return {
             options: {
                 size: { w:400, h:300},
-                nodeSize: 35,
+                nodeSize: 20,
                 nodeLabels: true,
                 canvas: false,
                 linkWidth:2
@@ -32,15 +43,27 @@ export default {
             states: 'exams/getExamStates',
             currentState: 'exams/getCurrentState'
         }),
-        nodes() {
-            return this.states.map((state, id) => {
-                const _color = state == this.currentState ? 'red' : 'green';
-                return {name: state, id, _color}
+        format() {
+            let nodes = []
+            let links = []
+
+            this.states.forEach(state => {
+                const _color = state.code == this.currentState ? 'red' : 'green';
+                nodes.push({name: state.code, id: state.code, _color})
+                state.edges.forEach(nextState => {
+                    links.push({sid: state.code, tid: nextState})
+                })
             })
+            return { nodes, links }
         }
     },
     methods: {
         ...mapActions('exams', ['fetchExamState']),
+        lcb (link) {
+            link._svgAttrs = { 'marker-end': 'url(#m-end)',
+                            'marker-start': 'url(#m-start)'}
+            return link
+        }
     },
     mounted() {
         const examId = this.$route.params.exam_id;
@@ -48,3 +71,9 @@ export default {
     }
 }
 </script>
+
+<style scoped>
+#m-end path, #m-start{
+  fill: rgba(18, 120, 98, 0.8);
+}
+</style>
