@@ -86,11 +86,8 @@ export default {
                                      "states_likelihoods": this.statesLikelihoods});
                 let that = this;
                 setTimeout(function(){ if (this.terminateTest) {
-                        alert("Too many errors - test over")
-                        // that.$router.push({name: 'domains'})
+                        alert("Test terminated")
                         that.$router.push({name: 'domains'})
-
-                        // window.location.href = "/domains";
                     }
                 }, 100);
                 this.currentQuestionIndex = this.answeredQuestions.length;

@@ -231,8 +231,6 @@ def determine_next_question(answered_questions, choices, exam_id, states_likelih
     all_problem_ids = [p.id for p in all_problems]
     print(f"Problem ids for this exam: {all_problem_ids}")
 
-    # current_state = guess_current_state(all_questions, answered_questions, choices)
-    # states_likelihoods = update_likelihoods_for_current_state(states_likelihoods, current_state)
     states_likelihoods = OrderedDict(sorted(states_likelihoods.items(),
                                      key=lambda t: t[1], reverse=True))
     current_state = next(iter(states_likelihoods))
@@ -302,9 +300,9 @@ def update_likelihoods_markov(question_idx, states_likelihoods, r):
 
 def g(question_idx, K, r, L_K, L_q, L_q_complement):
     val = 0
-    if K[question_idx] == str(r):  # K in k_{q}
+    if K[question_idx] == '1':  # K in k_{q}
         # r * L_{n, K}/L_{n, K_{q}}
-        val = L_K / L_q
+        val = r * L_K / L_q
     else:   # K in k_{q_complement}
         # (1 - r) * L_{n, K}/L_{n, K_{q_complement}}
         val = (1-r) * L_K / L_q_complement

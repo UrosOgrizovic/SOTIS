@@ -189,14 +189,21 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
         states_likelihoods = request.data["states_likelihoods"]
         exam = Exam.objects.get(id=request.data["id"])
-        all_questions = list(exam.questions.all())
         answered_questions = request.data["answered_questions"]
+        all_questions = list(exam.questions.all())
+        all_questions_ids = [q.id for q in all_questions]
+        question_idx = all_questions_ids.index(answered_questions[-1]["id"])
         # sorting necessary so that current state and response pattern are correct
         answered_questions.sort(key=lambda q: q['id'])
-        current_state = guess_current_state(all_questions, answered_questions, choices_ids)
-        print(f"states_likelihoods before final update {states_likelihoods}")
-        states_likelihoods = update_likelihoods_for_current_state(states_likelihoods, current_state)
-        print(f"states_likelihoods after final update {states_likelihoods}")
+        print(f"states_likelihoods before update {states_likelihoods}")
+        latest_answer_correct = Choice.objects.get(id=choices_ids[-1]).correct_answer
+        r = 1 if latest_answer_correct else 0
+        ret_val = update_likelihoods_markov(question_idx, states_likelihoods, r)
+        terminate_test = False
+        if ret_val == 'terminate test':
+            terminate_test = True
+        else:
+            states_likelihoods = ret_val
         # select state with highest likelihood
         current_state = max(states_likelihoods, key=lambda key: states_likelihoods[key])
         response_pattern = []
@@ -371,15 +378,14 @@ class ExamViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                             if not is_actual and ProblemAttachment.objects.filter(source=all_problems[sid].id,
                                                                                   target=all_problems[tid].id).exists():
                                 edges.add(state)
-
+                return edges
             return {
                 'code': element,
                 'edges': get_edges(element)
             }
 
-        state_matrix = map(map_state_matrix_edges, state_matrix)
-
-        return Response({"current_state": current_state['state'], "states": state_matrix}, status=status.HTTP_200_OK)
+        new_state_matrix = map(map_state_matrix_edges, state_matrix)
+        return Response({"current_state": current_state['state'], "states": new_state_matrix}, status=status.HTTP_200_OK)
 
 
 class SubjectViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin,
